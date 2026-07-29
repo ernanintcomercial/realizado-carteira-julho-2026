@@ -41,15 +41,29 @@ const orders = read(FILES.pedidos, true).filter(r =>
 const indexRows = read(FILES.index);
 const indexCodes = new Set(indexRows.map(r => Number(r.codigo)).filter(Number.isFinite));
 const reps = new Set();
+const walletRepIds = new Set();
 
 const walletDaily = new Map();
 const walletBacklogDaily = new Map();
+const repDaily = new Map();
+const repBacklogDaily = new Map();
+const repContractSales = new Map();
+const repContractBacklog = new Map();
+const repNames = new Map();
 for (const row of wallet) {
   const date = dateKey(row.Data), c = contract(row.Contrato);
   if (!ORDER.includes(c)) continue;
   add(walletDaily, `${date}|${c}`, row['Total Geral']);
   add(walletBacklogDaily, `${date}|${c}`, row.Carteira);
-  if (Number.isFinite(Number(row['ID Representante']))) reps.add(Number(row['ID Representante']));
+  const repId = Number(row['ID Representante']);
+  if (Number.isFinite(repId)) {
+    reps.add(repId); walletRepIds.add(repId);
+    repNames.set(repId, String(row['Nome Abreviado'] || repId));
+    add(repDaily, `${date}|${repId}`, row['Total Geral']);
+    add(repBacklogDaily, `${date}|${repId}`, row.Carteira);
+    add(repContractSales, `${repId}|${c}`, row['Total Geral']);
+    add(repContractBacklog, `${repId}|${c}`, row.Carteira);
+  }
 }
 const orderDaily = new Map();
 for (const row of orders) {
@@ -83,6 +97,29 @@ const contracts = ORDER.map(c => ({
     : 0,
   diferencaVerificacao: money(cumulative[c].real - cumulative[c].check),
 }));
+const representatives = [...walletRepIds].map(id => {
+  let real = 0, walletValue = 0;
+  const serieDiaria = dates.map(date => {
+    real += repDaily.get(`${date}|${id}`) || 0;
+    walletValue += repBacklogDaily.get(`${date}|${id}`) || 0;
+    return { data: date, realizado: money(real), carteira: money(walletValue) };
+  });
+  const contratos = ORDER.map(c => {
+    const realizado = money(repContractSales.get(`${id}|${c}`) || 0);
+    const carteira = money(repContractBacklog.get(`${id}|${c}`) || 0);
+    return { contrato: c, realizado, carteira, potencial: money(realizado + carteira) };
+  });
+  return {
+    id,
+    nome: repNames.get(id) || String(id),
+    realizado: money(real),
+    carteira: money(walletValue),
+    potencial: money(real + walletValue),
+    foraINDEX: !indexCodes.has(id),
+    contratos,
+    serieDiaria,
+  };
+}).sort((a, b) => b.realizado - a.realizado);
 const sum = field => money(contracts.reduce((n, row) => n + row[field], 0));
 const lastDate = wallet.map(r => dateKey(r.Data)).sort().at(-1);
 const totalCheck = money(orders.reduce((n, r) => n + (Number(r.ROB) || 0), 0));
@@ -93,6 +130,7 @@ const payload = {
   geradoEm: new Date().toLocaleString('pt-BR'),
   totais: { realizado: totalSource, carteira: sum('carteira'), potencial: sum('potencial') },
   contratos: contracts,
+  representantes: representatives,
   serieDiaria: series,
   verificacoes: {
     totalWWWPD010: totalCheck,
