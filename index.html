@@ -100,6 +100,10 @@ function filteredRows(){
   const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
   return period.registros.filter(r=>(!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!rep||String(r.repId)===rep));
 }
+function matchesFilters(r){
+  const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
+  return (!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!rep||String(r.repId)===rep);
+}
 function updateRepOptions(){
   const region=$('regionSelect').value,old=$('repSelect').value;
   const reps=aggregate(period.registros.filter(r=>!region||r.regiao===region),['repId','representante']).sort((a,b)=>a.representante.localeCompare(b.representante));
@@ -142,14 +146,23 @@ function renderDetails(){
   $('detailRows').innerHTML=sorted.map(r=>`<tr><td><b>${r.representante}</b><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(r.realizado+r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function drawMonthly(){
-  const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};let series=data.mensal;
+  const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};
+  const series=data.mensal.map((month,i)=>{
+    const monthPeriod=data.periodos.find(x=>x.id===`M${String(i+1).padStart(2,'0')}`);
+    const monthRows=(monthPeriod?.registros||[]).filter(matchesFilters);
+    return {...month,meta:sum(monthRows,'meta'),realizado:sum(monthRows,'realizado'),carteira:sum(monthRows,'carteira')};
+  });
   const max=Math.max(1,...series.flatMap(x=>[x.meta,x.realizado+x.carteira]))*1.08,bw=(W-p.l-p.r)/12,y=v=>H-p.b-v*(H-p.t-p.b)/max;
   let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-7}" y="${yy+3}" text-anchor="end">${(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:0})}m</text>`}
   series.forEach((r,i)=>{const x=p.l+i*bw+bw*.13,w=bw*.32;h+=`<rect class="goalbar" x="${x}" y="${y(r.meta)}" width="${w}" height="${H-p.b-y(r.meta)}" rx="3"/><rect class="realbar" x="${x+w+3}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" rx="3"/>`;if(r.carteira)h+=`<rect class="walletbar" x="${x+w+3}" y="${y(r.realizado+r.carteira)}" width="${w}" height="${y(r.realizado)-y(r.realizado+r.carteira)}" rx="2"/>`;h+=`<text class="axis" x="${x+w}" y="${H-13}" text-anchor="middle">${r.nome}</text>`});svg.innerHTML=h+'<g id="monthlyHover"></g>';
   svg._hover={series,W,H,p,bw,y};svg.onmousemove=monthlyHover;svg.onmouseleave=()=>hideHover('monthlyTooltip','monthlyHover');
 }
 function drawDaily(){
-  const series=data.carteiraDiaria,svg=$('dailyChart'),W=1000,H=350,p={l:70,r:18,t:18,b:40};if(!series.length){svg.innerHTML='';return}
+  const detail=(data.carteiraDiariaRegistros||[]).filter(matchesFilters),byDate=new Map();
+  detail.forEach(r=>{const x=byDate.get(r.data)||{realizado:0,carteira:0};x.realizado+=+r.realizado||0;x.carteira+=+r.carteira||0;byDate.set(r.data,x)});
+  let realAcc=0,walletAcc=0;
+  const series=data.carteiraDiaria.map(day=>{const x=byDate.get(day.data)||{realizado:0,carteira:0};realAcc+=x.realizado;walletAcc+=x.carteira;return {data:day.data,realizado:realAcc,carteira:walletAcc}});
+  const svg=$('dailyChart'),W=1000,H=350,p={l:70,r:18,t:18,b:40};if(!series.length){svg.innerHTML='';return}
   const max=Math.max(1,...series.flatMap(x=>[x.realizado,x.carteira]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(series.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max,path=k=>series.map((r,i)=>(i?'L':'M')+x(i)+','+y(r[k])).join(' ');
   let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${compact(v).replace('R$ ','')}</text>`}
   [0,Math.floor((series.length-1)/2),series.length-1].forEach(i=>h+=`<text class="axis" x="${x(i)}" y="${H-14}" text-anchor="middle">${series[i].data.slice(8,10)}/07</text>`);
@@ -188,7 +201,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';render()};
 
-fetch('dados-gerenciais.json?v=4').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=5').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
