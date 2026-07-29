@@ -1,0 +1,74 @@
+name: Atualizar dashboard comercial
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-dashboard-comercial
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    if: ${{ vars.AUTOMACAO_ETL_ATIVA == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar dashboard
+        uses: actions/checkout@v4
+
+      - name: Baixar fontes privadas
+        uses: actions/checkout@v4
+        with:
+          repository: ernanintcomercial/ETLdados
+          token: ${{ secrets.ETL_REPO_TOKEN }}
+          path: _fontes/ETLdados
+          persist-credentials: false
+
+      - name: Preparar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Validar idade das fontes
+        shell: bash
+        run: |
+          set -euo pipefail
+          agora=$(date +%s)
+          for arquivo in WWWPD010.xlsx WWWPD019.xlsx INDEX.xlsx; do
+            test -s "_fontes/ETLdados/$arquivo"
+            alteracao=$(git -C _fontes/ETLdados log -1 --format=%ct -- "$arquivo")
+            idade=$((agora - alteracao))
+            if [ "$arquivo" != "INDEX.xlsx" ] && [ "$idade" -gt 129600 ]; then
+              echo "::error::$arquivo não foi atualizado nas últimas 36 horas."
+              exit 1
+            fi
+          done
+
+      - name: Executar ETL e validações
+        run: |
+          python etl/gerar_dashboard.py \
+            --pd010 _fontes/ETLdados/WWWPD010.xlsx \
+            --pd019 _fontes/ETLdados/WWWPD019.xlsx \
+            --index _fontes/ETLdados/INDEX.xlsx \
+            --holidays config/feriados.json \
+            --output dados-gerenciais.json
+
+      - name: Publicar somente se houver mudança
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- dados-gerenciais.json; then
+            echo "Nenhuma alteração nos dados."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados-gerenciais.json
+          git commit -m "data: atualização automática do dashboard"
+          git push
