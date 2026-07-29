@@ -91,7 +91,8 @@ const money2=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',m
 const day=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('ç','c');
 let data,mode='contract',selectedContract='ALUMÍNIO',selectedRep=null,currentRows=[];
-const els={real:document.getElementById('totalReal'),wallet:document.getElementById('totalCarteira'),potential:document.getElementById('totalPotencial')};
+const byId=id=>document.getElementById(id);
+const els={real:byId('totalReal'),wallet:byId('totalCarteira'),potential:byId('totalPotencial'),contracts:byId('contracts'),repSelect:byId('repSelect'),contractView:byId('contractView'),repView:byId('repView'),chart:byId('chart'),chartWrap:byId('chartWrap'),chartTitle:byId('chartTitle'),tableTitle:byId('tableTitle'),dailyRows:byId('dailyRows'),tooltip:byId('tooltip'),themeBtn:byId('themeBtn'),stamp:byId('stamp'),sources:byId('sources')};
 
 function setTotals(real,wallet){
   els.real.textContent=money(real);els.wallet.textContent=money(wallet);els.potential.textContent=money(real+wallet);
@@ -103,10 +104,10 @@ function contractRows(contract){
 function repRows(rep){return rep.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
 
 function renderCards(items,clickable=true){
-  contracts.innerHTML=items.map(c=>`<article class="card contract${c.contrato===selectedContract&&mode==='contract'?' active':''}" data-contract="${c.contrato}">
+  els.contracts.innerHTML=items.map(c=>`<article class="card contract${c.contrato===selectedContract&&mode==='contract'?' active':''}" data-contract="${c.contrato}">
     <h2>${c.contrato}</h2><div class="metric"><span>Realizado</span><b>${money(c.realizado)}</b></div>
     <div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
-  if(clickable)contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectContract(x.dataset.contract));
+  if(clickable)els.contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectContract(x.dataset.contract));
 }
 function selectContract(contract){
   selectedContract=contract;const item=data.contratos.find(x=>x.contrato===contract);setTotals(data.totais.realizado,data.totais.carteira);
@@ -114,46 +115,46 @@ function selectContract(contract){
 }
 function selectRepresentative(id){
   selectedRep=data.representantes.find(x=>String(x.id)===String(id))||data.representantes[0];
-  repSelect.value=String(selectedRep.id);setTotals(selectedRep.realizado,selectedRep.carteira);renderCards(selectedRep.contratos,false);
+  els.repSelect.value=String(selectedRep.id);setTotals(selectedRep.realizado,selectedRep.carteira);renderCards(selectedRep.contratos,false);
   draw(repRows(selectedRep),`Evolução acumulada · ${selectedRep.nome}`,`${selectedRep.nome} · ${selectedRep.id}`);
 }
 function setMode(next){
-  mode=next;contractView.classList.toggle('active',mode==='contract');repView.classList.toggle('active',mode==='rep');repSelect.classList.toggle('hidden',mode!=='rep');
+  mode=next;els.contractView.classList.toggle('active',mode==='contract');els.repView.classList.toggle('active',mode==='rep');els.repSelect.classList.toggle('hidden',mode!=='rep');
   if(mode==='contract')selectContract(selectedContract);else selectRepresentative(selectedRep?.id||data.representantes[0].id);
 }
 
 function draw(rows,title,label){
-  currentRows=rows;const svg=document.getElementById('chart'),W=1000,H=330,p={l:75,r:25,t:20,b:38};
+  currentRows=rows;const svg=els.chart,W=1000,H=330,p={l:75,r:25,t:20,b:38};
   const max=Math.max(1,...rows.flatMap(x=>[x.real,x.wallet]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max;
   const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(r[k]).toFixed(1)).join(' ');
   let html='';for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$ ','')}</text>`}
   [0,7,14,21,30].forEach(i=>html+=`<text class="axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${day(rows[i].date)}</text>`);
   html+=`<path class="sales" d="${path('real')}"/><path class="wallet" d="${path('wallet')}"/><g id="hoverLayer"></g>`;
-  svg.innerHTML=html;svg._chart={W,H,p,x,y,max};chartTitle.textContent=title;tableTitle.textContent=label;
-  dailyRows.innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
+  svg.innerHTML=html;svg._chart={W,H,p,x,y,max};els.chartTitle.textContent=title;els.tableTitle.textContent=label;
+  els.dailyRows.innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
 }
 function showTooltip(event){
-  if(!currentRows.length)return;const rect=chart.getBoundingClientRect(),cfg=chart._chart;
+  if(!currentRows.length)return;const rect=els.chart.getBoundingClientRect(),cfg=els.chart._chart;
   const svgX=(event.clientX-rect.left)*cfg.W/rect.width,index=Math.max(0,Math.min(currentRows.length-1,Math.round((svgX-cfg.p.l)*(currentRows.length-1)/(cfg.W-cfg.p.l-cfg.p.r))));
   const row=currentRows[index],xx=cfg.x(index),yr=cfg.y(row.real),yw=cfg.y(row.wallet);
-  hoverLayer.innerHTML=`<line class="hover-line" x1="${xx}" y1="${cfg.p.t}" x2="${xx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-dot" cx="${xx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-dot" cx="${xx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
-  tooltip.innerHTML=`<strong>${day(row.date)}</strong><div class="tooltip-row"><span>Realizado</span><b>${money2(row.real)}</b></div><div class="tooltip-row"><span>Carteira</span><b>${money2(row.wallet)}</b></div>`;
-  tooltip.style.display='block';const left=Math.min(chartWrap.clientWidth-tooltip.offsetWidth-8,Math.max(8,event.clientX-rect.left+14)),top=Math.max(6,event.clientY-rect.top-tooltip.offsetHeight-12);tooltip.style.left=left+'px';tooltip.style.top=top+'px';
+  byId('hoverLayer').innerHTML=`<line class="hover-line" x1="${xx}" y1="${cfg.p.t}" x2="${xx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-dot" cx="${xx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-dot" cx="${xx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
+  els.tooltip.innerHTML=`<strong>${day(row.date)}</strong><div class="tooltip-row"><span>Realizado</span><b>${money2(row.real)}</b></div><div class="tooltip-row"><span>Carteira</span><b>${money2(row.wallet)}</b></div>`;
+  els.tooltip.style.display='block';const left=Math.min(els.chartWrap.clientWidth-els.tooltip.offsetWidth-8,Math.max(8,event.clientX-rect.left+14)),top=Math.max(6,event.clientY-rect.top-els.tooltip.offsetHeight-12);els.tooltip.style.left=left+'px';els.tooltip.style.top=top+'px';
 }
-chart.addEventListener('mousemove',showTooltip);chart.addEventListener('mouseleave',()=>{tooltip.style.display='none';hoverLayer.innerHTML=''});
+els.chart.addEventListener('mousemove',showTooltip);els.chart.addEventListener('mouseleave',()=>{els.tooltip.style.display='none';byId('hoverLayer').innerHTML=''});
 
 function applyTheme(theme){
-  document.documentElement.dataset.theme=theme;localStorage.setItem('dashboard-theme',theme);themeBtn.textContent=theme==='dark'?'☀️ Claro':'🌙 Escuro';
+  document.documentElement.dataset.theme=theme;localStorage.setItem('dashboard-theme',theme);els.themeBtn.textContent=theme==='dark'?'☀️ Claro':'🌙 Escuro';
 }
-themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+els.themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 applyTheme(localStorage.getItem('dashboard-theme')||'light');
-contractView.onclick=()=>setMode('contract');repView.onclick=()=>setMode('rep');repSelect.onchange=e=>selectRepresentative(e.target.value);
+els.contractView.onclick=()=>setMode('contract');els.repView.onclick=()=>setMode('rep');els.repSelect.onchange=e=>selectRepresentative(e.target.value);
 
 fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
-  data=payload;stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
-  repSelect.innerHTML=data.representantes.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
-  sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('contract');
-}).catch(()=>{stamp.textContent='Erro ao carregar dados-julho.json'});
+  data=payload;els.stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
+  els.repSelect.innerHTML=data.representantes.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
+  els.sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('contract');
+}).catch(error=>{console.error(error);els.stamp.textContent='Erro: '+error.message});
 </script>
 </body>
 </html>
