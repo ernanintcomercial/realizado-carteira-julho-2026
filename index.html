@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Realizado x Carteira â€” Julho 2026</title>
+  <title>Realizado x Carteira — Julho 2026</title>
   <style>
     :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e6eaf0;--blue:#2563eb;--amber:#f59e0b;--green:#059669;--red:#dc2626}
     *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif}
@@ -32,14 +32,14 @@
 <body>
 <main>
   <header>
-    <div><h1>Realizado x Carteira</h1><div class="subtitle">Julho de 2026 Â· acumulado diÃ¡rio por contrato</div></div>
-    <div class="stamp" id="stamp">Carregandoâ€¦</div>
+    <div><h1>Realizado x Carteira</h1><div class="subtitle">Julho de 2026 · acumulado diário por contrato</div></div>
+    <div class="stamp" id="stamp">Carregando…</div>
   </header>
 
   <section class="kpis">
-    <article class="card kpi"><span>Realizado acumulado</span><strong class="blue" id="totalReal">â€”</strong></article>
-    <article class="card kpi"><span>Carteira acumulada</span><strong class="amber" id="totalCarteira">â€”</strong></article>
-    <article class="card kpi"><span>Potencial comercial</span><strong class="green" id="totalPotencial">â€”</strong></article>
+    <article class="card kpi"><span>Realizado acumulado</span><strong class="blue" id="totalReal">—</strong></article>
+    <article class="card kpi"><span>Carteira acumulada</span><strong class="amber" id="totalCarteira">—</strong></article>
+    <article class="card kpi"><span>Potencial comercial</span><strong class="green" id="totalPotencial">—</strong></article>
   </section>
 
   <div class="warning" id="warning"></div>
@@ -47,14 +47,14 @@
 
   <section class="card panel">
     <div class="panel-head">
-      <h2 id="chartTitle">EvoluÃ§Ã£o acumulada</h2>
+      <h2 id="chartTitle">Evolução acumulada</h2>
       <div class="legend"><span><i class="dot" style="background:#2563eb"></i>Realizado</span><span><i class="dot" style="background:#f59e0b"></i>Carteira</span></div>
     </div>
-    <svg id="chart" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-label="GrÃ¡fico acumulado diÃ¡rio"></svg>
+    <svg id="chart" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-label="Gráfico acumulado diário"></svg>
   </section>
 
   <section class="card panel">
-    <div class="panel-head"><h2>Detalhe diÃ¡rio</h2><span class="subtitle" id="tableTitle"></span></div>
+    <div class="panel-head"><h2>Detalhe diário</h2><span class="subtitle" id="tableTitle"></span></div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Data</th><th>Realizado acumulado</th><th>Carteira acumulada</th><th>Potencial</th></tr></thead>
@@ -68,8 +68,8 @@
 <script>
 const money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const day=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('Ã§','c');
-let data,selected='ALUMÃNIO';
+const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('ç','c');
+let data,selected='ALUMÍNIO';
 
 function draw(contract){
   selected=contract;
@@ -80,11 +80,11 @@ function draw(contract){
   const x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1), y=v=>H-p.b-v*(H-p.t-p.b)/max;
   const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(r[k]).toFixed(1)).join(' ');
   let html='';
-  for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$Â ','')}</text>`}
+  for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$ ','')}</text>`}
   [0,7,14,21,30].forEach(i=>html+=`<text class="axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${day(rows[i].date)}</text>`);
   html+=`<path class="sales" d="${path('real')}"/><path class="wallet" d="${path('wallet')}"/>`;
   svg.innerHTML=html;
-  document.getElementById('chartTitle').textContent=`EvoluÃ§Ã£o acumulada Â· ${contract}`;
+  document.getElementById('chartTitle').textContent=`Evolução acumulada · ${contract}`;
   document.getElementById('tableTitle').textContent=contract;
   document.getElementById('dailyRows').innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
 }
@@ -92,11 +92,11 @@ function draw(contract){
 fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
   data=payload;
   totalReal.textContent=money(data.totais.realizado); totalCarteira.textContent=money(data.totais.carteira); totalPotencial.textContent=money(data.totais.potencial);
-  stamp.innerHTML=`Dados atÃ© <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
+  stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
   contracts.innerHTML=data.contratos.map(c=>`<article class="card contract" data-contract="${c.contrato}"><h2>${c.contrato}</h2><div class="metric"><span>Realizado</span><b>${money(c.realizado)}</b></div><div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
   contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>draw(x.dataset.contract));
-  if(data.verificacoes.status!=='OK'){warning.classList.add('show');warning.textContent=`ConciliaÃ§Ã£o: total realizado fecha com WWWPD010. R$ ${data.verificacoes.valorReclassificadoEntreContratos.toLocaleString('pt-BR',{minimumFractionDigits:2})} aparece classificado entre PlÃ¡stico e AlumÃ­nio de forma diferente nas duas fontes. Representante fora do INDEX: ${data.verificacoes.representantesForaINDEX.join(', ')}.`}
-  sources.textContent='Fontes: '+data.fontes.join(' Â· ');
+  if(data.verificacoes.status!=='OK'){warning.classList.add('show');warning.textContent=`Conciliação: total realizado fecha com WWWPD010. R$ ${data.verificacoes.valorReclassificadoEntreContratos.toLocaleString('pt-BR',{minimumFractionDigits:2})} aparece classificado entre Plástico e Alumínio de forma diferente nas duas fontes. Representante fora do INDEX: ${data.verificacoes.representantesForaINDEX.join(', ')}.`}
+  sources.textContent='Fontes: '+data.fontes.join(' · ');
   draw(selected);
 }).catch(()=>{stamp.textContent='Erro ao carregar dados-julho.json'});
 </script>
