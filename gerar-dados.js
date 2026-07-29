@@ -8,8 +8,8 @@ const FILES = {
   pedidos: path.join(DIR, 'WWWPD010.xlsx'),
   index: path.join(DIR, 'INDEX.xlsx'),
 };
-const CONTRACTS = { DL: 'LED', DP: 'PLÃSTICO', DU: 'ALUMÃNIO', DX: 'EX' };
-const ORDER = ['ALUMÃNIO', 'PLÃSTICO', 'LED', 'EX'];
+const CONTRACTS = { DL: 'LED', DP: 'PLÁSTICO', DU: 'ALUMÍNIO', DX: 'EX' };
+const ORDER = ['ALUMÍNIO', 'PLÁSTICO', 'LED', 'EX'];
 
 const norm = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
 const money = v => Math.round((Number(v) || 0) * 100) / 100;
@@ -36,7 +36,7 @@ for (const file of Object.values(FILES)) {
 
 const wallet = read(FILES.carteira).filter(r => dateKey(r.Data).startsWith('2026-07'));
 const orders = read(FILES.pedidos, true).filter(r =>
-  dateKey(r['Dt Implant']).startsWith('2026-07') && !norm(r['SituaÃ§Ã£o Item']).includes('CANCELAD')
+  dateKey(r['Dt Implant']).startsWith('2026-07') && !norm(r['Situação Item']).includes('CANCELAD')
 );
 const indexRows = read(FILES.index);
 const indexCodes = new Set(indexRows.map(r => Number(r.codigo)).filter(Number.isFinite));
@@ -67,7 +67,7 @@ const series = dates.map(date => {
     cumulative[c].real += walletDaily.get(`${date}|${c}`) || 0;
     cumulative[c].wallet += walletBacklogDaily.get(`${date}|${c}`) || 0;
     cumulative[c].check += orderDaily.get(`${date}|${c}`) || 0;
-    const slug = norm(c).toLowerCase().replace('Ã§', 'c');
+    const slug = norm(c).toLowerCase().replace('ç', 'c');
     point[`${slug}_realizado`] = money(cumulative[c].real);
     point[`${slug}_carteira`] = money(cumulative[c].wallet);
   }
@@ -88,7 +88,7 @@ const lastDate = wallet.map(r => dateKey(r.Data)).sort().at(-1);
 const totalCheck = money(orders.reduce((n, r) => n + (Number(r.ROB) || 0), 0));
 const totalSource = sum('realizado');
 const payload = {
-  titulo: 'Realizado x Carteira â€” Julho 2026',
+  titulo: 'Realizado x Carteira — Julho 2026',
   periodo: { inicio: '2026-07-01', fim: lastDate },
   geradoEm: new Date().toLocaleString('pt-BR'),
   totais: { realizado: totalSource, carteira: sum('carteira'), potencial: sum('potencial') },
@@ -100,12 +100,12 @@ const payload = {
     diferencaTotal: money(totalSource - totalCheck),
     valorReclassificadoEntreContratos: money(contracts.reduce((n, x) => n + Math.abs(x.diferencaVerificacao), 0) / 2),
     representantesForaINDEX: [...reps].filter(x => !indexCodes.has(x)).sort((a, b) => a - b),
-    status: contracts.some(x => Math.abs(x.diferencaVerificacao) > 0.01) ? 'ATENÃ‡ÃƒO' : 'OK',
+    status: contracts.some(x => Math.abs(x.diferencaVerificacao) > 0.01) ? 'ATENÇÃO' : 'OK',
   },
   fontes: [
-    'carteira.xlsx â€” realizado, carteira e contrato',
-    'WWWPD010.xlsx â€” verificaÃ§Ã£o do realizado',
-    'INDEX.xlsx â€” verificaÃ§Ã£o cadastral dos representantes',
+    'carteira.xlsx — realizado, carteira e contrato',
+    'WWWPD010.xlsx — verificação do realizado',
+    'INDEX.xlsx — verificação cadastral dos representantes',
   ],
 };
 
