@@ -15,7 +15,7 @@
     .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:14px;box-shadow:var(--shadow)}
     .field{display:grid;gap:4px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.field select{min-width:180px}
     .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.tab{border:0;background:transparent;color:var(--muted);padding:10px 15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600}.tab.active{color:var(--blue);border-color:var(--blue)}
-    .view{display:none}.view.active{display:block}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(6,1fr);margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+    .view{display:none}.view.active{display:block}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
     .kpi{padding:17px}.kpi label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.kpi strong{display:block;font-size:22px;margin:7px 0 3px}.kpi small{color:var(--muted)}
     .blue{color:var(--blue)}.amber{color:var(--amber)}.green{color:var(--green)}.red{color:var(--red)}
     .main-grid{grid-template-columns:minmax(0,1.75fr) minmax(300px,.75fr);margin-bottom:14px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.panel h2{font-size:15px;margin:0}.legend{display:flex;gap:12px;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
@@ -23,7 +23,7 @@
     .chart-shell{position:relative}.chart-tooltip{display:none;position:absolute;z-index:5;pointer-events:none;min-width:210px;padding:10px 12px;border-radius:9px;background:var(--nav);color:#fff;box-shadow:0 10px 35px #0005;font-size:12px}.chart-tooltip strong{display:block;margin-bottom:6px}.tip-row{display:flex;justify-content:space-between;gap:18px;margin-top:3px}.hover-guide{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}.hover-band{fill:var(--blue);opacity:.07}.hover-point{stroke:var(--card);stroke-width:3}
     .regions{grid-template-columns:repeat(3,1fr);margin-bottom:14px}.region{padding:16px}.region h3{font-size:13px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;gap:8px;margin-top:6px}.metric span{color:var(--muted)}.progress{height:7px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:12px}.progress i{display:block;height:100%;background:var(--blue);border-radius:9px}
     .insights{display:grid;gap:9px}.insight{padding:11px;border-left:3px solid var(--blue);background:var(--bg);border-radius:7px}.insight.warn{border-color:var(--amber)}.insight.bad{border-color:var(--red)}
-    .split{grid-template-columns:1fr 1fr}.table-wrap{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;min-width:690px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--nav);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.04em;z-index:2}tbody tr:hover{background:var(--bg)}
+    .split{grid-template-columns:1fr 1fr}.table-wrap{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;min-width:690px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--nav);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.04em;z-index:2}tbody tr:hover{background:var(--bg)}.rep-link{border:0;padding:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;text-align:left}.rep-link:hover{color:var(--blue);text-decoration:underline}
     .pill{display:inline-block;padding:3px 8px;border-radius:20px;background:var(--blue2);color:var(--blue);font-weight:700;font-size:11px}.pill.good{background:#d1fae5;color:#047857}.pill.warn{background:#fef3c7;color:#b45309}.pill.bad{background:#fee2e2;color:#b91c1c}
     .daily-chart{height:350px}.note{font-size:12px;color:var(--muted);margin-top:12px}.loading{padding:70px;text-align:center;color:var(--muted)}
     footer{color:var(--muted);font-size:11px;margin-top:16px}
@@ -35,7 +35,7 @@
 <body>
 <main class="app">
   <header>
-    <div><h1>Painel Comercial Integrado</h1><div class="subtitle">Metas, vendas, carteira e potencial comercial</div></div>
+    <div><h1>Painel Comercial Integrado</h1><div class="subtitle">Metas, vendas e composição da carteira</div></div>
     <div class="header-right"><div class="stamp" id="stamp">Carregando…</div><button class="btn" id="themeBtn">🌙 Escuro</button></div>
   </header>
 
@@ -59,14 +59,13 @@
   <section class="view active" id="executive">
     <div class="grid kpis">
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
-      <article class="card kpi"><label>Vendas realizadas</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
+      <article class="card kpi"><label>Total geral</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
       <article class="card kpi"><label>Atingimento</label><strong id="kPct">—</strong><small>realizado ÷ meta</small></article>
       <article class="card kpi"><label>Carteira do período</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
-      <article class="card kpi"><label>Potencial comercial</label><strong class="green" id="kPotential">—</strong><small>realizado + carteira</small></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
     <div class="grid main-grid">
-      <article class="card panel"><div class="panel-head"><h2>Meta x realizado por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira do mês</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Meta x total geral por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado sem carteira</span><span><i class="dot" style="background:var(--amber)"></i>Carteira dentro do total</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
       <article class="card panel"><div class="panel-head"><h2>Leitura gerencial</h2></div><div class="insights" id="insights"></div></article>
     </div>
     <div class="grid regions" id="regionCards"></div>
@@ -74,17 +73,17 @@
 
   <section class="view" id="performance">
     <div class="grid split">
-      <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">ordenado por atingimento</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
-      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Potencial</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">clique no representante para filtrar</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
     </div>
   </section>
 
   <section class="view" id="wallet">
-    <article class="card panel"><div class="panel-head"><div><h2>Evolução diária — posição de julho</h2><div class="muted">Acumulado do arquivo de carteira</div></div><div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div></div><div class="chart-shell" id="dailyShell"><svg class="daily-chart" id="dailyChart" viewBox="0 0 1000 350"></svg><div class="chart-tooltip" id="dailyTooltip"></div></div><div class="note">Carteira é uma posição operacional atual. Não representa histórico reconstruído dos meses anteriores.</div></article>
+    <article class="card panel"><div class="panel-head"><div><h2>Evolução diária — posição de julho</h2><div class="muted">Carteira destacada como parte do total geral</div></div><div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Total geral</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div></div><div class="chart-shell" id="dailyShell"><svg class="daily-chart" id="dailyChart" viewBox="0 0 1000 350"></svg><div class="chart-tooltip" id="dailyTooltip"></div></div><div class="note">A carteira já compõe o total geral e não é somada novamente.</div></article>
   </section>
 
   <section class="view" id="details">
-    <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Potencial</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
+    <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
   </section>
   <footer id="footer"></footer>
 </main>
@@ -111,8 +110,8 @@ function updateRepOptions(){
   if(reps.some(r=>String(r.repId)===old))$('repSelect').value=old;
 }
 function render(){
-  rows=filteredRows();const meta=sum(rows,'meta'),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),potential=real+wallet,gap=meta-potential,pct=percent(real,meta);
-  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWallet').textContent=money(wallet);$('kPotential').textContent=money(potential);
+  rows=filteredRows();const meta=sum(rows,'meta'),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta);
+  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWallet').textContent=money(wallet);
   $('kPct').textContent=pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';$('kPct').className=pct>=100?'green':pct>=80?'amber':'red';
   $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
   $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent='posição '+data.cortes.carteira;
@@ -120,30 +119,30 @@ function render(){
 }
 function renderRegions(){
   const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>data.ordemRegioes.indexOf(a.regiao)-data.ordemRegioes.indexOf(b.regiao));
-  $('regionCards').innerHTML=regionAgg.map(r=>{const p=percent(r.realizado,r.meta),pot=r.realizado+r.carteira;return `<article class="card region"><h3>${r.regiao}</h3><div class="metric"><span>Meta</span><b>${money(r.meta)}</b></div><div class="metric"><span>Realizado</span><b>${money(r.realizado)}</b></div><div class="metric"><span>Carteira</span><b>${money(r.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(pot)}</b></div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div><div class="metric"><span>Atingimento</span><b>${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b></div></article>`}).join('');
+  $('regionCards').innerHTML=regionAgg.map(r=>{const p=percent(r.realizado,r.meta),net=Math.max(0,r.realizado-r.carteira);return `<article class="card region"><h3>${r.regiao}</h3><div class="metric"><span>Meta</span><b>${money(r.meta)}</b></div><div class="metric"><span>Total geral</span><b>${money(r.realizado)}</b></div><div class="metric"><span>Carteira</span><b>${money(r.carteira)}</b></div><div class="metric"><span>Sem carteira</span><b>${money(net)}</b></div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div><div class="metric"><span>Atingimento</span><b>${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b></div></article>`}).join('');
 }
 function renderInsights(meta,real,wallet){
   const repAgg=aggregate(rows,['repId','representante','regiao']),best=repAgg.filter(x=>x.meta>0).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta))[0];
   const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>percent(a.realizado,a.meta)-percent(b.realizado,b.meta)),weak=regionAgg[0];
-  const gap=meta-real-wallet,items=[
-    {c:gap<=0?'':'bad',t:gap<=0?`Potencial supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} mesmo considerando carteira.`},
+  const gap=meta-real,items=[
+    {c:gap<=0?'':'bad',t:gap<=0?`Total geral supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} para atingir a meta.`},
     {c:'',t:best?`${best.representante} lidera atingimento: ${percent(best.realizado,best.meta).toFixed(0)}%.`:'Sem meta para ranking.'},
     {c:'warn',t:weak?`${weak.regiao} possui menor atingimento: ${percent(weak.realizado,weak.meta).toFixed(0)}%.`:'Sem região selecionada.'},
-    {c:'',t:`Carteira representa ${percent(wallet,real+wallet).toFixed(1)}% do potencial comercial.`}
+    {c:'',t:`Carteira representa ${percent(wallet,real).toFixed(1)}% do total geral.`}
   ];$('insights').innerHTML=items.map(x=>`<div class="insight ${x.c}">${x.t}</div>`).join('');
 }
 function renderRanking(){
   const agg=aggregate(rows,['repId','representante','regiao']).filter(x=>x.meta||x.realizado||x.carteira).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta)).slice(0,20);
-  $('rankingRows').innerHTML=agg.map(r=>`<tr><td>${r.representante}<div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="rep-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderContracts(){
   const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
-  $('contractRows').innerHTML=agg.map(r=>`<tr><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(r.realizado+r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('contractRows').innerHTML=agg.map(r=>`<tr><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderDetails(){
   const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('detailCount').textContent=sorted.length+' combinações';
-  $('detailRows').innerHTML=sorted.map(r=>`<tr><td><b>${r.representante}</b><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(r.realizado+r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('detailRows').innerHTML=sorted.map(r=>`<tr><td><button class="rep-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function drawMonthly(){
   const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};
@@ -152,9 +151,9 @@ function drawMonthly(){
     const monthRows=(monthPeriod?.registros||[]).filter(matchesFilters);
     return {...month,meta:sum(monthRows,'meta'),realizado:sum(monthRows,'realizado'),carteira:sum(monthRows,'carteira')};
   });
-  const max=Math.max(1,...series.flatMap(x=>[x.meta,x.realizado+x.carteira]))*1.08,bw=(W-p.l-p.r)/12,y=v=>H-p.b-v*(H-p.t-p.b)/max;
+  const max=Math.max(1,...series.flatMap(x=>[x.meta,x.realizado]))*1.08,bw=(W-p.l-p.r)/12,y=v=>H-p.b-v*(H-p.t-p.b)/max;
   let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-7}" y="${yy+3}" text-anchor="end">${(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:0})}m</text>`}
-  series.forEach((r,i)=>{const x=p.l+i*bw+bw*.13,w=bw*.32;h+=`<rect class="goalbar" x="${x}" y="${y(r.meta)}" width="${w}" height="${H-p.b-y(r.meta)}" rx="3"/><rect class="realbar" x="${x+w+3}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" rx="3"/>`;if(r.carteira)h+=`<rect class="walletbar" x="${x+w+3}" y="${y(r.realizado+r.carteira)}" width="${w}" height="${y(r.realizado)-y(r.realizado+r.carteira)}" rx="2"/>`;h+=`<text class="axis" x="${x+w}" y="${H-13}" text-anchor="middle">${r.nome}</text>`});svg.innerHTML=h+'<g id="monthlyHover"></g>';
+  series.forEach((r,i)=>{const x=p.l+i*bw+bw*.13,w=bw*.32,net=Math.max(0,r.realizado-r.carteira);h+=`<rect class="goalbar" x="${x}" y="${y(r.meta)}" width="${w}" height="${H-p.b-y(r.meta)}" rx="3"/><rect class="realbar" x="${x+w+3}" y="${y(net)}" width="${w}" height="${H-p.b-y(net)}" rx="3"/>`;if(r.carteira)h+=`<rect class="walletbar" x="${x+w+3}" y="${y(r.realizado)}" width="${w}" height="${y(net)-y(r.realizado)}" rx="2"/>`;h+=`<text class="axis" x="${x+w}" y="${H-13}" text-anchor="middle">${r.nome}</text>`});svg.innerHTML=h+'<g id="monthlyHover"></g>';
   svg._hover={series,W,H,p,bw,y};svg.onmousemove=monthlyHover;svg.onmouseleave=()=>hideHover('monthlyTooltip','monthlyHover');
 }
 function drawDaily(){
@@ -182,18 +181,22 @@ function monthlyHover(event){
   const svg=$('monthlyChart'),cfg=svg._hover,tip=$('monthlyTooltip'),rect=svg.getBoundingClientRect(),svgX=(event.clientX-rect.left)*cfg.W/rect.width;
   const i=Math.max(0,Math.min(11,Math.floor((svgX-cfg.p.l)/cfg.bw))),r=cfg.series[i],cx=cfg.p.l+i*cfg.bw+cfg.bw/2;
   $('monthlyHover').innerHTML=`<rect class="hover-band" x="${cfg.p.l+i*cfg.bw}" y="${cfg.p.t}" width="${cfg.bw}" height="${cfg.H-cfg.p.t-cfg.p.b}" rx="4"/><line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/>`;
-  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Realizado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira do mês</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Potencial</span><b>${money(r.realizado+r.carteira)}</b></div>`;
+  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Total geral</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira dentro do total</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Realizado sem carteira</span><b>${money(Math.max(0,r.realizado-r.carteira))}</b></div>`;
   tooltipPosition(event,svg,tip,$('monthlyShell'));
 }
 function dailyHover(event){
   const svg=$('dailyChart'),cfg=svg._hover,tip=$('dailyTooltip'),rect=svg.getBoundingClientRect(),svgX=(event.clientX-rect.left)*cfg.W/rect.width;
   const i=Math.max(0,Math.min(cfg.series.length-1,Math.round((svgX-cfg.p.l)*(cfg.series.length-1)/(cfg.W-cfg.p.l-cfg.p.r)))),r=cfg.series[i],cx=cfg.x(i),yr=cfg.y(r.realizado),yw=cfg.y(r.carteira);
   $('dailyHover').innerHTML=`<line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-point" cx="${cx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-point" cx="${cx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
-  tip.innerHTML=`<strong>${r.data.slice(8,10)}/${r.data.slice(5,7)}/${r.data.slice(0,4)}</strong><div class="tip-row"><span>Realizado acumulado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira acumulada</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Potencial</span><b>${money(r.realizado+r.carteira)}</b></div>`;
+  tip.innerHTML=`<strong>${r.data.slice(8,10)}/${r.data.slice(5,7)}/${r.data.slice(0,4)}</strong><div class="tip-row"><span>Total geral acumulado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira acumulada</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Sem carteira</span><b>${money(Math.max(0,r.realizado-r.carteira))}</b></div>`;
   tooltipPosition(event,svg,tip,$('dailyShell'));
 }
 function selectPeriod(){
   period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
+}
+function filterRepresentative(repId){
+  const option=[...$('repSelect').options].find(x=>x.value===String(repId));
+  if(option){$('repSelect').value=String(repId);render()}
 }
 function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('commercial-theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Claro':'🌙 Escuro'}
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
@@ -201,7 +204,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';render()};
 
-fetch('dados-gerenciais.json?v=5').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=6').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
