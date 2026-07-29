@@ -61,12 +61,12 @@
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
       <article class="card kpi"><label>Vendas realizadas</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
       <article class="card kpi"><label>Atingimento</label><strong id="kPct">—</strong><small>realizado ÷ meta</small></article>
-      <article class="card kpi"><label>Carteira atual</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
+      <article class="card kpi"><label>Carteira do período</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
       <article class="card kpi"><label>Potencial comercial</label><strong class="green" id="kPotential">—</strong><small>realizado + carteira</small></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
     <div class="grid main-grid">
-      <article class="card panel"><div class="panel-head"><h2>Meta x realizado por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira atual</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Meta x realizado por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira do mês</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
       <article class="card panel"><div class="panel-head"><h2>Leitura gerencial</h2></div><div class="insights" id="insights"></div></article>
     </div>
     <div class="grid regions" id="regionCards"></div>
@@ -169,7 +169,7 @@ function monthlyHover(event){
   const svg=$('monthlyChart'),cfg=svg._hover,tip=$('monthlyTooltip'),rect=svg.getBoundingClientRect(),svgX=(event.clientX-rect.left)*cfg.W/rect.width;
   const i=Math.max(0,Math.min(11,Math.floor((svgX-cfg.p.l)/cfg.bw))),r=cfg.series[i],cx=cfg.p.l+i*cfg.bw+cfg.bw/2;
   $('monthlyHover').innerHTML=`<rect class="hover-band" x="${cfg.p.l+i*cfg.bw}" y="${cfg.p.t}" width="${cfg.bw}" height="${cfg.H-cfg.p.t-cfg.p.b}" rx="4"/><line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/>`;
-  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Realizado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira atual</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Potencial</span><b>${money(r.realizado+r.carteira)}</b></div>`;
+  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Realizado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira do mês</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Potencial</span><b>${money(r.realizado+r.carteira)}</b></div>`;
   tooltipPosition(event,svg,tip,$('monthlyShell'));
 }
 function dailyHover(event){
@@ -188,7 +188,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=1').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=2').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
