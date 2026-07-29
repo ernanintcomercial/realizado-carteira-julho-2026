@@ -1,0 +1,12 @@
+{
+  "name": "realizado-carteira-julho-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dashboard de realizado x carteira acumulada por contrato em julho de 2026",
+  "scripts": {
+    "gerar": "node gerar-dados.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
