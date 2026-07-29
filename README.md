@@ -1,30 +1,30 @@
-# Realizado x Carteira â€” Julho 2026
+# Realizado x Carteira — Julho 2026
 
-Teste isolado dos repositÃ³rios existentes. Nenhum arquivo dos repositÃ³rios
+Teste isolado dos repositórios existentes. Nenhum arquivo dos repositórios
 `ETLdados` ou `Relat-rio-de-Vendas---Gerencial` foi alterado.
 
 ## Resultado
 
 O site mostra, por contrato:
 
-- realizado diÃ¡rio e acumulado;
-- carteira diÃ¡ria e acumulada;
+- realizado diário e acumulado;
+- carteira diária e acumulada;
 - potencial comercial (`realizado + carteira`);
-- conciliaÃ§Ã£o do realizado com `WWWPD010.xlsx`;
-- verificaÃ§Ã£o cadastral com `INDEX.xlsx`.
+- conciliação do realizado com `WWWPD010.xlsx`;
+- verificação cadastral com `INDEX.xlsx`.
 
 Contratos:
 
 - `DL`: LED
-- `DP`: PlÃ¡stico
-- `DU`: AlumÃ­nio
+- `DP`: Plástico
+- `DU`: Alumínio
 - `DX`: EX
 
 ## Atualizar os dados
 
 Coloque em `dados/`:
 
-- `carteira.xlsx`, com as colunas do arquivo â€œExtraÃ§Ã£o em Tabelaâ€;
+- `carteira.xlsx`, com as colunas do arquivo “Extração em Tabela”;
 - `WWWPD010.xlsx`;
 - `INDEX.xlsx`.
 
@@ -35,11 +35,11 @@ npm install
 npm run gerar
 ```
 
-O comando substitui `dados-julho.json`. O site contÃ©m somente dados agregados;
+O comando substitui `dados-julho.json`. O site contém somente dados agregados;
 arquivos brutos devem permanecer privados.
 
-## ConciliaÃ§Ã£o encontrada
+## Conciliação encontrada
 
 Total realizado fecha exatamente entre arquivo enviado e `WWWPD010.xlsx`.
-Existe reclassificaÃ§Ã£o de R$ 6.807,55 entre PlÃ¡stico e AlumÃ­nio nas fontes.
-Representante `9958` nÃ£o consta no `INDEX.xlsx`.
+Existe reclassificação de R$ 6.807,55 entre Plástico e Alumínio nas fontes.
+Representante `9958` não consta no `INDEX.xlsx`.
