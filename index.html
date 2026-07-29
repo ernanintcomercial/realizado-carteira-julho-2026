@@ -16,7 +16,7 @@
     .theme-btn:hover,.view-btn:hover{border-color:var(--blue)}.theme-btn{white-space:nowrap}
     .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.view-tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:11px}
     .view-btn{border:0;padding:7px 12px;background:transparent}.view-btn.active{background:var(--blue);color:#fff}
-    #repSelect{min-width:310px;max-width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--control);color:var(--ink)}
+    #repSelect,#regionSelect{min-width:260px;max-width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--control);color:var(--ink)}
     .hidden{display:none!important}
     .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 10px var(--shadow)}
@@ -33,7 +33,7 @@
     .table-wrap{overflow:auto;max-height:410px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--head);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
     footer{color:var(--muted);font-size:12px;margin-top:16px}
     @media(max-width:800px){header{align-items:flex-start;flex-direction:column}.header-actions{width:100%;justify-content:space-between}.stamp{text-align:left}.kpis{grid-template-columns:1fr}.contracts{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:480px){main{padding:20px 10px}.contracts{grid-template-columns:1fr}.kpi strong{font-size:22px}.header-actions{align-items:flex-start}.controls{align-items:stretch}.view-tabs{width:100%}.view-btn{flex:1}#repSelect{min-width:0;width:100%}}
+    @media(max-width:480px){main{padding:20px 10px}.contracts{grid-template-columns:1fr}.kpi strong{font-size:22px}.header-actions{align-items:flex-start}.controls{align-items:stretch}.view-tabs{width:100%}.view-btn{flex:1}#repSelect,#regionSelect{min-width:0;width:100%}}
   </style>
 </head>
 <body>
@@ -48,9 +48,11 @@
 
   <section class="controls">
     <div class="view-tabs" aria-label="Tipo de visão">
-      <button class="view-btn active" id="contractView" type="button">Por contrato</button>
+      <button class="view-btn active" id="regionView" type="button">Por região</button>
+      <button class="view-btn" id="contractView" type="button">Por contrato</button>
       <button class="view-btn" id="repView" type="button">Por representante</button>
     </div>
+    <select id="regionSelect" class="hidden" aria-label="Selecionar região"></select>
     <select id="repSelect" class="hidden" aria-label="Selecionar representante"></select>
   </section>
 
@@ -90,9 +92,9 @@ const money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',ma
 const money2=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
 const day=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('ç','c');
-let data,mode='contract',selectedContract='ALUMÍNIO',selectedRep=null,currentRows=[];
+let data,mode='region',selectedRegion=null,selectedContract='ALUMÍNIO',selectedRep=null,currentRows=[];
 const byId=id=>document.getElementById(id);
-const els={real:byId('totalReal'),wallet:byId('totalCarteira'),potential:byId('totalPotencial'),contracts:byId('contracts'),repSelect:byId('repSelect'),contractView:byId('contractView'),repView:byId('repView'),chart:byId('chart'),chartWrap:byId('chartWrap'),chartTitle:byId('chartTitle'),tableTitle:byId('tableTitle'),dailyRows:byId('dailyRows'),tooltip:byId('tooltip'),themeBtn:byId('themeBtn'),stamp:byId('stamp'),sources:byId('sources')};
+const els={real:byId('totalReal'),wallet:byId('totalCarteira'),potential:byId('totalPotencial'),contracts:byId('contracts'),regionSelect:byId('regionSelect'),repSelect:byId('repSelect'),regionView:byId('regionView'),contractView:byId('contractView'),repView:byId('repView'),chart:byId('chart'),chartWrap:byId('chartWrap'),chartTitle:byId('chartTitle'),tableTitle:byId('tableTitle'),dailyRows:byId('dailyRows'),tooltip:byId('tooltip'),themeBtn:byId('themeBtn'),stamp:byId('stamp'),sources:byId('sources')};
 
 function setTotals(real,wallet){
   els.real.textContent=money(real);els.wallet.textContent=money(wallet);els.potential.textContent=money(real+wallet);
@@ -102,6 +104,7 @@ function contractRows(contract){
   return data.serieDiaria.map(x=>({date:x.data,real:x[key+'_realizado'],wallet:x[key+'_carteira']}));
 }
 function repRows(rep){return rep.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
+function regionRows(region){return region.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
 
 function renderCards(items,clickable=true){
   els.contracts.innerHTML=items.map(c=>`<article class="card contract${c.contrato===selectedContract&&mode==='contract'?' active':''}" data-contract="${c.contrato}">
@@ -109,18 +112,39 @@ function renderCards(items,clickable=true){
     <div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
   if(clickable)els.contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectContract(x.dataset.contract));
 }
+function renderRegionCards(){
+  els.contracts.innerHTML=data.regioes.map(r=>`<article class="card contract${r.regiao===selectedRegion?.regiao?' active':''}" data-region="${r.regiao}">
+    <h2>${r.regiao}</h2><div class="metric"><span>Realizado</span><b>${money(r.realizado)}</b></div>
+    <div class="metric"><span>Carteira</span><b>${money(r.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(r.potencial)}</b></div></article>`).join('');
+  els.contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectRegion(x.dataset.region));
+}
+function selectRegion(name){
+  selectedRegion=data.regioes.find(x=>x.regiao===name)||data.regioes[0];
+  els.regionSelect.value=selectedRegion.regiao;setTotals(selectedRegion.realizado,selectedRegion.carteira);
+  if(mode==='region'){renderRegionCards();draw(regionRows(selectedRegion),`Evolução acumulada · ${selectedRegion.regiao}`,selectedRegion.regiao)}
+  else populateRepresentatives();
+}
+function populateRepresentatives(){
+  const reps=selectedRegion.representantes;
+  els.repSelect.innerHTML=reps.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
+  selectRepresentative(reps.some(r=>String(r.id)===String(selectedRep?.id))?selectedRep.id:reps[0].id);
+}
 function selectContract(contract){
   selectedContract=contract;const item=data.contratos.find(x=>x.contrato===contract);setTotals(data.totais.realizado,data.totais.carteira);
   renderCards(data.contratos,true);draw(contractRows(contract),`Evolução acumulada · ${contract}`,contract);
 }
 function selectRepresentative(id){
-  selectedRep=data.representantes.find(x=>String(x.id)===String(id))||data.representantes[0];
+  const reps=selectedRegion.representantes;
+  selectedRep=reps.find(x=>String(x.id)===String(id))||reps[0];
   els.repSelect.value=String(selectedRep.id);setTotals(selectedRep.realizado,selectedRep.carteira);renderCards(selectedRep.contratos,false);
   draw(repRows(selectedRep),`Evolução acumulada · ${selectedRep.nome}`,`${selectedRep.nome} · ${selectedRep.id}`);
 }
 function setMode(next){
-  mode=next;els.contractView.classList.toggle('active',mode==='contract');els.repView.classList.toggle('active',mode==='rep');els.repSelect.classList.toggle('hidden',mode!=='rep');
-  if(mode==='contract')selectContract(selectedContract);else selectRepresentative(selectedRep?.id||data.representantes[0].id);
+  mode=next;els.regionView.classList.toggle('active',mode==='region');els.contractView.classList.toggle('active',mode==='contract');els.repView.classList.toggle('active',mode==='rep');
+  els.regionSelect.classList.toggle('hidden',mode!=='rep');els.repSelect.classList.toggle('hidden',mode!=='rep');
+  if(mode==='region')selectRegion(selectedRegion?.regiao||data.regioes[0].regiao);
+  else if(mode==='contract')selectContract(selectedContract);
+  else selectRegion(selectedRegion?.regiao||data.regioes[0].regiao);
 }
 
 function draw(rows,title,label){
@@ -148,12 +172,13 @@ function applyTheme(theme){
 }
 els.themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 applyTheme(localStorage.getItem('dashboard-theme')||'light');
-els.contractView.onclick=()=>setMode('contract');els.repView.onclick=()=>setMode('rep');els.repSelect.onchange=e=>selectRepresentative(e.target.value);
+els.regionView.onclick=()=>setMode('region');els.contractView.onclick=()=>setMode('contract');els.repView.onclick=()=>setMode('rep');
+els.regionSelect.onchange=e=>selectRegion(e.target.value);els.repSelect.onchange=e=>selectRepresentative(e.target.value);
 
-fetch('dados-julho.json?v=7e40db1').then(r=>r.json()).then(payload=>{
+fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
   data=payload;els.stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
-  els.repSelect.innerHTML=data.representantes.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
-  els.sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('contract');
+  els.regionSelect.innerHTML=data.regioes.map(r=>`<option value="${r.regiao}">${r.regiao}</option>`).join('');
+  els.sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('region');
 }).catch(error=>{console.error(error);els.stamp.textContent='Erro: '+error.message});
 </script>
 </body>

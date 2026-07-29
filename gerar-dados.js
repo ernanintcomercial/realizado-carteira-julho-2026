@@ -10,8 +10,27 @@ const FILES = {
 };
 const CONTRACTS = { DL: 'LED', DP: 'PLÁSTICO', DU: 'ALUMÍNIO', DX: 'EX' };
 const ORDER = ['ALUMÍNIO', 'PLÁSTICO', 'LED', 'EX'];
+const REGION_ORDER = ['SUL E CENTRO OESTE', 'SUDESTE', 'NORTE E NORDESTE'];
+const UF_REGION = {
+  ACRE:'NORTE E NORDESTE',ALAGOAS:'NORTE E NORDESTE',AMAPA:'NORTE E NORDESTE',AMAZONAS:'NORTE E NORDESTE',
+  BAHIA:'NORTE E NORDESTE',CEARA:'NORTE E NORDESTE',MARANHAO:'NORTE E NORDESTE',PARA:'NORTE E NORDESTE',
+  PARAIBA:'NORTE E NORDESTE',PERNAMBUCO:'NORTE E NORDESTE',PIAUI:'NORTE E NORDESTE','RIO GRANDE DO NORTE':'NORTE E NORDESTE',
+  RONDONIA:'NORTE E NORDESTE',RORAIMA:'NORTE E NORDESTE',SERGIPE:'NORTE E NORDESTE',TOCANTINS:'NORTE E NORDESTE',
+  'ESPIRITO SANTO':'SUDESTE','MINAS GERAIS':'SUDESTE','RIO DE JANEIRO':'SUDESTE','SAO PAULO':'SUDESTE',
+  'DISTRITO FEDERAL':'SUL E CENTRO OESTE',GOIAS:'SUL E CENTRO OESTE','MATO GROSSO':'SUL E CENTRO OESTE',
+  'MATO GROSSO DO SUL':'SUL E CENTRO OESTE',PARANA:'SUL E CENTRO OESTE','RIO GRANDE DO SUL':'SUL E CENTRO OESTE',
+  'SANTA CATARINA':'SUL E CENTRO OESTE',
+};
 
 const norm = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+const field = (row, wanted) => row[Object.keys(row).find(k => norm(k) === norm(wanted))];
+const regionName = v => {
+  const text = norm(v).replace(/\s+/g, ' ');
+  if (text.includes('SUDESTE')) return 'SUDESTE';
+  if (text.includes('NORTE')) return 'NORTE E NORDESTE';
+  if (text.includes('SUL') || text.includes('CENTRO')) return 'SUL E CENTRO OESTE';
+  return null;
+};
 const money = v => Math.round((Number(v) || 0) * 100) / 100;
 const contract = v => CONTRACTS[norm(v).slice(0, 2)] || 'OUTROS';
 const dateKey = v => {
@@ -40,6 +59,11 @@ const orders = read(FILES.pedidos, true).filter(r =>
 );
 const indexRows = read(FILES.index);
 const indexCodes = new Set(indexRows.map(r => Number(r.codigo)).filter(Number.isFinite));
+const indexRegion = new Map(indexRows.map(r => [Number(r.codigo), regionName(field(r, 'regiao'))]).filter(x => Number.isFinite(x[0]) && x[1]));
+for (const row of wallet) {
+  const id = Number(row['ID Representante']);
+  row._region = indexRegion.get(id) || UF_REGION[norm(row['Unidade Federativa'])] || 'NORTE E NORDESTE';
+}
 const reps = new Set();
 const walletRepIds = new Set();
 
@@ -120,6 +144,47 @@ const representatives = [...walletRepIds].map(id => {
     serieDiaria,
   };
 }).sort((a, b) => b.realizado - a.realizado);
+const buildRegion = region => {
+  const scoped = wallet.filter(r => r._region === region);
+  const ids = [...new Set(scoped.map(r => Number(r['ID Representante'])).filter(Number.isFinite))];
+  const contratos = ORDER.map(c => {
+    const rows = scoped.filter(r => contract(r.Contrato) === c);
+    const realizado = money(rows.reduce((n, r) => n + (Number(r['Total Geral']) || 0), 0));
+    const carteira = money(rows.reduce((n, r) => n + (Number(r.Carteira) || 0), 0));
+    return { contrato:c, realizado, carteira, potencial:money(realizado + carteira) };
+  });
+  const serieDiaria = []; let real = 0, carteira = 0;
+  for (const date of dates) {
+    const rows = scoped.filter(r => dateKey(r.Data) === date);
+    real += rows.reduce((n, r) => n + (Number(r['Total Geral']) || 0), 0);
+    carteira += rows.reduce((n, r) => n + (Number(r.Carteira) || 0), 0);
+    serieDiaria.push({ data:date, realizado:money(real), carteira:money(carteira) });
+  }
+  const representantes = ids.map(id => {
+    const repRows = scoped.filter(r => Number(r['ID Representante']) === id);
+    const repContracts = ORDER.map(c => {
+      const rows = repRows.filter(r => contract(r.Contrato) === c);
+      const realizado = money(rows.reduce((n, r) => n + (Number(r['Total Geral']) || 0), 0));
+      const carteira = money(rows.reduce((n, r) => n + (Number(r.Carteira) || 0), 0));
+      return { contrato:c, realizado, carteira, potencial:money(realizado + carteira) };
+    });
+    let repReal = 0, repWallet = 0;
+    const repSeries = dates.map(date => {
+      const rows = repRows.filter(r => dateKey(r.Data) === date);
+      repReal += rows.reduce((n, r) => n + (Number(r['Total Geral']) || 0), 0);
+      repWallet += rows.reduce((n, r) => n + (Number(r.Carteira) || 0), 0);
+      return { data:date, realizado:money(repReal), carteira:money(repWallet) };
+    });
+    return { id, nome:String(repRows[0]['Nome Abreviado'] || id), regiao:region, realizado:money(repReal),
+      carteira:money(repWallet), potencial:money(repReal + repWallet), foraINDEX:!indexCodes.has(id),
+      contratos:repContracts, serieDiaria:repSeries };
+  }).sort((a,b) => b.realizado - a.realizado);
+  const realizado = money(contratos.reduce((n,x) => n+x.realizado,0));
+  const carteiraTotal = money(contratos.reduce((n,x) => n+x.carteira,0));
+  return { regiao:region, realizado, carteira:carteiraTotal, potencial:money(realizado+carteiraTotal),
+    contratos, representantes, serieDiaria };
+};
+const regions = REGION_ORDER.map(buildRegion);
 const sum = field => money(contracts.reduce((n, row) => n + row[field], 0));
 const lastDate = wallet.map(r => dateKey(r.Data)).sort().at(-1);
 const totalCheck = money(orders.reduce((n, r) => n + (Number(r.ROB) || 0), 0));
@@ -130,6 +195,7 @@ const payload = {
   geradoEm: new Date().toLocaleString('pt-BR'),
   totais: { realizado: totalSource, carteira: sum('carteira'), potencial: sum('potencial') },
   contratos: contracts,
+  regioes: regions,
   representantes: representatives,
   serieDiaria: series,
   verificacoes: {

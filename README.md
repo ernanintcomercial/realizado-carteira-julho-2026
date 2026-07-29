@@ -7,6 +7,9 @@ Teste isolado dos repositórios existentes. Nenhum arquivo dos repositórios
 
 O site mostra, por contrato:
 
+- agregação inicial por `SUL E CENTRO OESTE`, `SUDESTE` e `NORTE E NORDESTE`;
+- representantes filtrados pela região definida no `INDEX.xlsx`;
+- fallback pela unidade federativa de cada linha quando o representante não consta no `INDEX.xlsx`;
 - realizado diário e acumulado;
 - carteira diária e acumulada;
 - potencial comercial (`realizado + carteira`);
