@@ -1,51 +1,31 @@
-# Realizado x Carteira — Julho 2026
+# Painel Comercial Integrado
 
-Teste isolado dos repositórios existentes. Nenhum arquivo dos repositórios
-`ETLdados` ou `Relat-rio-de-Vendas---Gerencial` foi alterado.
+Dashboard gerencial que combina metas, vendas realizadas, carteira e potencial comercial.
 
-## Resultado
+## Visões
 
-O site mostra, por contrato:
+- visão executiva com KPIs, evolução mensal e leitura gerencial;
+- períodos mensal, trimestral e ano até a data;
+- filtros por região, representante e contrato;
+- ranking de representantes;
+- desempenho por contrato;
+- evolução diária da carteira de julho;
+- detalhamento por região, representante e contrato;
+- tema claro e escuro.
 
-- agregação inicial por `SUL E CENTRO OESTE`, `SUDESTE` e `NORTE E NORDESTE`;
-- representantes filtrados pela região definida no `INDEX.xlsx`;
-- fallback pela unidade federativa de cada linha quando o representante não consta no `INDEX.xlsx`;
-- realizado diário e acumulado;
-- carteira diária e acumulada;
-- potencial comercial (`realizado + carteira`);
-- alternância entre visão por contrato e por representante;
-- tema claro/escuro com preferência salva no navegador;
-- valores do gráfico exibidos ao passar o mouse;
-- conciliação do realizado com `WWWPD010.xlsx`;
-- verificação cadastral com `INDEX.xlsx`.
+## Fontes
 
-Contratos:
+- `WWWPD010(1).xlsx`: vendas realizadas de 2026;
+- `WWWPD019.xlsx`: metas comerciais de 2026;
+- `Extração em Tabela (27).xlsx`: posição de carteira;
+- `INDEX.xlsx`: região e cadastro dos representantes.
 
-- `DL`: LED
-- `DP`: Plástico
-- `DU`: Alumínio
-- `DX`: EX
+Os arquivos brutos não são publicados. O site usa somente `dados-gerenciais.json`, com informações agregadas.
 
-## Atualizar os dados
+## Datas de corte
 
-Coloque em `dados/`:
+- realizado: 29/07/2026;
+- carteira: 28/07/2026;
+- metas: janeiro a dezembro de 2026.
 
-- `carteira.xlsx`, com as colunas do arquivo “Extração em Tabela”;
-- `WWWPD010.xlsx`;
-- `INDEX.xlsx`.
-
-Depois:
-
-```bash
-npm install
-npm run gerar
-```
-
-O comando substitui `dados-julho.json`. O site contém somente dados agregados;
-arquivos brutos devem permanecer privados.
-
-## Conciliação encontrada
-
-Total realizado fecha exatamente entre arquivo enviado e `WWWPD010.xlsx`.
-Existe reclassificação de R$ 6.807,55 entre Plástico e Alumínio nas fontes.
-Representante `9958` não consta no `INDEX.xlsx`.
+Os repositórios `ETLdados` e `Relat-rio-de-Vendas---Gerencial` foram usados apenas como referência e não foram alterados.

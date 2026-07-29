@@ -3,183 +3,171 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Realizado x Carteira — Julho 2026</title>
+  <title>Painel Comercial Integrado</title>
   <style>
-    :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e6eaf0;--head:#172033;--blue:#2563eb;--amber:#f59e0b;--green:#059669;--shadow:#1018280a;--control:#fff}
-    html[data-theme="dark"]{--bg:#0d1320;--card:#151d2c;--ink:#f1f5f9;--muted:#9ca9bc;--line:#2a3548;--head:#080d16;--blue:#60a5fa;--amber:#fbbf24;--green:#34d399;--shadow:#0006;--control:#1d2738}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif;transition:background .2s,color .2s}
-    main{max-width:1180px;margin:auto;padding:28px 18px 48px}
-    header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}
-    h1{font-size:25px;letter-spacing:-.5px;margin:0 0 4px}.subtitle{color:var(--muted)}
-    .header-actions{display:flex;align-items:center;gap:12px}.stamp{text-align:right;color:var(--muted);font-size:12px}
-    button,select{font:inherit}.theme-btn,.view-btn{border:1px solid var(--line);background:var(--control);color:var(--ink);border-radius:9px;padding:9px 12px;cursor:pointer}
-    .theme-btn:hover,.view-btn:hover{border-color:var(--blue)}.theme-btn{white-space:nowrap}
-    .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.view-tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:11px}
-    .view-btn{border:0;padding:7px 12px;background:transparent}.view-btn.active{background:var(--blue);color:#fff}
-    #repSelect,#regionSelect{min-width:260px;max-width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--control);color:var(--ink)}
-    .hidden{display:none!important}
-    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 10px var(--shadow)}
-    .kpi{padding:18px}.kpi span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-    .kpi strong{display:block;font-size:25px;margin-top:6px}.blue{color:var(--blue)}.amber{color:var(--amber)}.green{color:var(--green)}
-    .contracts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
-    .contract{padding:16px;cursor:pointer;transition:.15s;border:2px solid transparent}.contract:hover,.contract.active{border-color:var(--blue);transform:translateY(-1px)}
-    .contract h2{font-size:14px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;gap:8px;margin-top:7px}.metric span{color:var(--muted)}
-    .panel{padding:20px;margin-bottom:14px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-    .panel h2{font-size:16px;margin:0}.legend{display:flex;gap:14px;color:var(--muted);font-size:12px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
-    .chart-wrap{position:relative}#chart{width:100%;height:330px;display:block;cursor:crosshair}.grid{stroke:var(--line);stroke-width:1}.axis{fill:var(--muted);font-size:11px}.sales{fill:none;stroke:var(--blue);stroke-width:3}.wallet{fill:none;stroke:var(--amber);stroke-width:3}.hover-line{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}.hover-dot{stroke:var(--card);stroke-width:3}
-    .tooltip{position:absolute;z-index:3;pointer-events:none;display:none;min-width:190px;background:var(--head);color:#fff;border-radius:9px;padding:10px 12px;box-shadow:0 8px 30px #0004;font-size:12px}
-    .tooltip strong{display:block;margin-bottom:5px}.tooltip-row{display:flex;justify-content:space-between;gap:14px;margin-top:3px}
-    .table-wrap{overflow:auto;max-height:410px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--head);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-    footer{color:var(--muted);font-size:12px;margin-top:16px}
-    @media(max-width:800px){header{align-items:flex-start;flex-direction:column}.header-actions{width:100%;justify-content:space-between}.stamp{text-align:left}.kpis{grid-template-columns:1fr}.contracts{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:480px){main{padding:20px 10px}.contracts{grid-template-columns:1fr}.kpi strong{font-size:22px}.header-actions{align-items:flex-start}.controls{align-items:stretch}.view-tabs{width:100%}.view-btn{flex:1}#repSelect,#regionSelect{min-width:0;width:100%}}
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e5eaf1;--blue:#2563eb;--blue2:#dbeafe;--amber:#f59e0b;--green:#059669;--red:#dc2626;--nav:#101828;--control:#fff;--shadow:0 4px 18px #1018280b}
+    html[data-theme=dark]{--bg:#0c1320;--card:#151e2e;--ink:#f1f5f9;--muted:#9ca9bc;--line:#2a364a;--blue:#60a5fa;--blue2:#1e3a5f;--amber:#fbbf24;--green:#34d399;--red:#fb7185;--nav:#080d16;--control:#1d283a;--shadow:0 5px 24px #0005}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif;transition:.2s}
+    button,select,input{font:inherit}.app{max-width:1380px;margin:auto;padding:24px 20px 48px}
+    header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}h1{font-size:25px;letter-spacing:-.5px;margin:0}.subtitle,.muted{color:var(--muted)}
+    .header-right{display:flex;gap:12px;align-items:center;text-align:right}.stamp{font-size:12px;color:var(--muted)}
+    .btn,.control{border:1px solid var(--line);background:var(--control);color:var(--ink);border-radius:9px;padding:9px 12px}.btn{cursor:pointer}.btn:hover{border-color:var(--blue)}
+    .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:14px;box-shadow:var(--shadow)}
+    .field{display:grid;gap:4px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.field select{min-width:180px}
+    .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.tab{border:0;background:transparent;color:var(--muted);padding:10px 15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600}.tab.active{color:var(--blue);border-color:var(--blue)}
+    .view{display:none}.view.active{display:block}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(6,1fr);margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+    .kpi{padding:17px}.kpi label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.kpi strong{display:block;font-size:22px;margin:7px 0 3px}.kpi small{color:var(--muted)}
+    .blue{color:var(--blue)}.amber{color:var(--amber)}.green{color:var(--green)}.red{color:var(--red)}
+    .main-grid{grid-template-columns:minmax(0,1.75fr) minmax(300px,.75fr);margin-bottom:14px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.panel h2{font-size:15px;margin:0}.legend{display:flex;gap:12px;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+    svg{width:100%;display:block}.gridline{stroke:var(--line);stroke-width:1}.axis{fill:var(--muted);font-size:10px}.goalbar{fill:var(--blue2)}.realbar{fill:var(--blue)}.walletbar{fill:var(--amber)}.salesline{fill:none;stroke:var(--blue);stroke-width:3}.walletline{fill:none;stroke:var(--amber);stroke-width:3}
+    .regions{grid-template-columns:repeat(3,1fr);margin-bottom:14px}.region{padding:16px}.region h3{font-size:13px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;gap:8px;margin-top:6px}.metric span{color:var(--muted)}.progress{height:7px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:12px}.progress i{display:block;height:100%;background:var(--blue);border-radius:9px}
+    .insights{display:grid;gap:9px}.insight{padding:11px;border-left:3px solid var(--blue);background:var(--bg);border-radius:7px}.insight.warn{border-color:var(--amber)}.insight.bad{border-color:var(--red)}
+    .split{grid-template-columns:1fr 1fr}.table-wrap{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;min-width:690px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--nav);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.04em;z-index:2}tbody tr:hover{background:var(--bg)}
+    .pill{display:inline-block;padding:3px 8px;border-radius:20px;background:var(--blue2);color:var(--blue);font-weight:700;font-size:11px}.pill.good{background:#d1fae5;color:#047857}.pill.warn{background:#fef3c7;color:#b45309}.pill.bad{background:#fee2e2;color:#b91c1c}
+    .daily-chart{height:350px}.note{font-size:12px;color:var(--muted);margin-top:12px}.loading{padding:70px;text-align:center;color:var(--muted)}
+    footer{color:var(--muted);font-size:11px;margin-top:16px}
+    @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.main-grid,.split{grid-template-columns:1fr}}
+    @media(max-width:760px){.app{padding:18px 10px}.kpis{grid-template-columns:repeat(2,1fr)}.regions{grid-template-columns:1fr}.field{flex:1 1 45%}.field select{width:100%;min-width:0}.header-right{align-items:flex-end;flex-direction:column}.tabs{overflow:auto}.tab{white-space:nowrap}}
+    @media(max-width:430px){header{flex-direction:column}.header-right{width:100%;align-items:flex-start;text-align:left}.kpis{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-<main>
+<main class="app">
   <header>
-    <div><h1>Realizado x Carteira</h1><div class="subtitle">Julho de 2026 · acumulado diário</div></div>
-    <div class="header-actions">
-      <div class="stamp" id="stamp">Carregando…</div>
-      <button class="theme-btn" id="themeBtn" type="button" aria-label="Alternar tema">🌙 Escuro</button>
-    </div>
+    <div><h1>Painel Comercial Integrado</h1><div class="subtitle">Metas, vendas, carteira e potencial comercial</div></div>
+    <div class="header-right"><div class="stamp" id="stamp">Carregando…</div><button class="btn" id="themeBtn">🌙 Escuro</button></div>
   </header>
 
-  <section class="controls">
-    <div class="view-tabs" aria-label="Tipo de visão">
-      <button class="view-btn active" id="regionView" type="button">Por região</button>
-      <button class="view-btn" id="contractView" type="button">Por contrato</button>
-      <button class="view-btn" id="repView" type="button">Por representante</button>
-    </div>
-    <select id="regionSelect" class="hidden" aria-label="Selecionar região"></select>
-    <select id="repSelect" class="hidden" aria-label="Selecionar representante"></select>
+  <section class="filters">
+    <div class="field"><label>Período</label><select class="control" id="periodSelect"></select></div>
+    <div class="field"><label>Região</label><select class="control" id="regionSelect"><option value="">Todas as regiões</option></select></div>
+    <div class="field"><label>Contrato</label><select class="control" id="contractSelect"><option value="">Todos os contratos</option></select></div>
+    <div class="field"><label>Representante</label><select class="control" id="repSelect"><option value="">Todos os representantes</option></select></div>
+    <button class="btn" id="clearBtn">Limpar filtros</button>
   </section>
 
-  <section class="kpis">
-    <article class="card kpi"><span>Realizado acumulado</span><strong class="blue" id="totalReal">—</strong></article>
-    <article class="card kpi"><span>Carteira acumulada</span><strong class="amber" id="totalCarteira">—</strong></article>
-    <article class="card kpi"><span>Potencial comercial</span><strong class="green" id="totalPotencial">—</strong></article>
+  <nav class="tabs">
+    <button class="tab active" data-view="executive">Visão executiva</button>
+    <button class="tab" data-view="performance">Desempenho</button>
+    <button class="tab" data-view="wallet">Carteira diária</button>
+    <button class="tab" data-view="details">Detalhamento</button>
+  </nav>
+
+  <div id="loading" class="card loading">Preparando painel gerencial…</div>
+
+  <section class="view active" id="executive">
+    <div class="grid kpis">
+      <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
+      <article class="card kpi"><label>Vendas realizadas</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
+      <article class="card kpi"><label>Atingimento</label><strong id="kPct">—</strong><small>realizado ÷ meta</small></article>
+      <article class="card kpi"><label>Carteira atual</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
+      <article class="card kpi"><label>Potencial comercial</label><strong class="green" id="kPotential">—</strong><small>realizado + carteira</small></article>
+      <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
+    </div>
+    <div class="grid main-grid">
+      <article class="card panel"><div class="panel-head"><h2>Meta x realizado por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira atual</span></div></div><svg id="monthlyChart" viewBox="0 0 900 310"></svg></article>
+      <article class="card panel"><div class="panel-head"><h2>Leitura gerencial</h2></div><div class="insights" id="insights"></div></article>
+    </div>
+    <div class="grid regions" id="regionCards"></div>
   </section>
 
-  <section class="contracts" id="contracts"></section>
-
-  <section class="card panel">
-    <div class="panel-head">
-      <h2 id="chartTitle">Evolução acumulada</h2>
-      <div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div>
-    </div>
-    <div class="chart-wrap" id="chartWrap">
-      <svg id="chart" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-label="Gráfico acumulado diário"></svg>
-      <div class="tooltip" id="tooltip"></div>
+  <section class="view" id="performance">
+    <div class="grid split">
+      <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">ordenado por atingimento</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Potencial</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
     </div>
   </section>
 
-  <section class="card panel">
-    <div class="panel-head"><h2>Detalhe diário</h2><span class="subtitle" id="tableTitle"></span></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Data</th><th>Realizado acumulado</th><th>Carteira acumulada</th><th>Potencial</th></tr></thead>
-        <tbody id="dailyRows"></tbody>
-      </table>
-    </div>
+  <section class="view" id="wallet">
+    <article class="card panel"><div class="panel-head"><div><h2>Evolução diária — posição de julho</h2><div class="muted">Acumulado do arquivo de carteira</div></div><div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div></div><svg class="daily-chart" id="dailyChart" viewBox="0 0 1000 350"></svg><div class="note">Carteira é uma posição operacional atual. Não representa histórico reconstruído dos meses anteriores.</div></article>
   </section>
 
-  <footer id="sources"></footer>
+  <section class="view" id="details">
+    <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Realizado</th><th>Carteira</th><th>Potencial</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
+  </section>
+  <footer id="footer"></footer>
 </main>
 <script>
-const money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
-const money2=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
-const day=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('ç','c');
-let data,mode='region',selectedRegion=null,selectedContract='ALUMÍNIO',selectedRep=null,currentRows=[];
-const byId=id=>document.getElementById(id);
-const els={real:byId('totalReal'),wallet:byId('totalCarteira'),potential:byId('totalPotencial'),contracts:byId('contracts'),regionSelect:byId('regionSelect'),repSelect:byId('repSelect'),regionView:byId('regionView'),contractView:byId('contractView'),repView:byId('repView'),chart:byId('chart'),chartWrap:byId('chartWrap'),chartTitle:byId('chartTitle'),tableTitle:byId('tableTitle'),dailyRows:byId('dailyRows'),tooltip:byId('tooltip'),themeBtn:byId('themeBtn'),stamp:byId('stamp'),sources:byId('sources')};
+const $=id=>document.getElementById(id), money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const compact=v=>{const a=Math.abs(v||0);return a>=1e6?'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e3?'R$ '+(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil':money(v)};
+const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]||0),0);
+let data,period,rows=[];
+const aggregate=(items,keys)=>{const map=new Map();items.forEach(r=>{const id=keys.map(k=>r[k]).join('|');if(!map.has(id))map.set(id,Object.fromEntries(keys.map(k=>[k,r[k]])));const x=map.get(id);['meta','realizado','carteira'].forEach(k=>x[k]=(x[k]||0)+(r[k]||0))});return [...map.values()]};
+const pill=p=>`<span class="pill ${p>=100?'good':p>=80?'warn':'bad'}">${p.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`;
 
-function setTotals(real,wallet){
-  els.real.textContent=money(real);els.wallet.textContent=money(wallet);els.potential.textContent=money(real+wallet);
+function filteredRows(){
+  const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
+  return period.registros.filter(r=>(!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!rep||String(r.repId)===rep));
 }
-function contractRows(contract){
-  const key=slug(contract);
-  return data.serieDiaria.map(x=>({date:x.data,real:x[key+'_realizado'],wallet:x[key+'_carteira']}));
+function updateRepOptions(){
+  const region=$('regionSelect').value,old=$('repSelect').value;
+  const reps=aggregate(period.registros.filter(r=>!region||r.regiao===region),['repId','representante']).sort((a,b)=>a.representante.localeCompare(b.representante));
+  $('repSelect').innerHTML='<option value="">Todos os representantes</option>'+reps.map(r=>`<option value="${r.repId}">${r.representante} · ${r.repId}</option>`).join('');
+  if(reps.some(r=>String(r.repId)===old))$('repSelect').value=old;
 }
-function repRows(rep){return rep.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
-function regionRows(region){return region.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
+function render(){
+  rows=filteredRows();const meta=sum(rows,'meta'),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),potential=real+wallet,gap=meta-potential,pct=percent(real,meta);
+  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWallet').textContent=money(wallet);$('kPotential').textContent=money(potential);
+  $('kPct').textContent=pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';$('kPct').className=pct>=100?'green':pct>=80?'amber':'red';
+  $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
+  $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent='posição '+data.cortes.carteira;
+  renderRegions();renderInsights(meta,real,wallet);renderRanking();renderContracts();renderDetails();drawMonthly();drawDaily();
+}
+function renderRegions(){
+  const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>data.ordemRegioes.indexOf(a.regiao)-data.ordemRegioes.indexOf(b.regiao));
+  $('regionCards').innerHTML=regionAgg.map(r=>{const p=percent(r.realizado,r.meta),pot=r.realizado+r.carteira;return `<article class="card region"><h3>${r.regiao}</h3><div class="metric"><span>Meta</span><b>${money(r.meta)}</b></div><div class="metric"><span>Realizado</span><b>${money(r.realizado)}</b></div><div class="metric"><span>Carteira</span><b>${money(r.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(pot)}</b></div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div><div class="metric"><span>Atingimento</span><b>${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b></div></article>`}).join('');
+}
+function renderInsights(meta,real,wallet){
+  const repAgg=aggregate(rows,['repId','representante','regiao']),best=repAgg.filter(x=>x.meta>0).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta))[0];
+  const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>percent(a.realizado,a.meta)-percent(b.realizado,b.meta)),weak=regionAgg[0];
+  const gap=meta-real-wallet,items=[
+    {c:gap<=0?'':'bad',t:gap<=0?`Potencial supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} mesmo considerando carteira.`},
+    {c:'',t:best?`${best.representante} lidera atingimento: ${percent(best.realizado,best.meta).toFixed(0)}%.`:'Sem meta para ranking.'},
+    {c:'warn',t:weak?`${weak.regiao} possui menor atingimento: ${percent(weak.realizado,weak.meta).toFixed(0)}%.`:'Sem região selecionada.'},
+    {c:'',t:`Carteira representa ${percent(wallet,real+wallet).toFixed(1)}% do potencial comercial.`}
+  ];$('insights').innerHTML=items.map(x=>`<div class="insight ${x.c}">${x.t}</div>`).join('');
+}
+function renderRanking(){
+  const agg=aggregate(rows,['repId','representante','regiao']).filter(x=>x.meta||x.realizado||x.carteira).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta)).slice(0,20);
+  $('rankingRows').innerHTML=agg.map(r=>`<tr><td>${r.representante}<div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+}
+function renderContracts(){
+  const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
+  $('contractRows').innerHTML=agg.map(r=>`<tr><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(r.realizado+r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+}
+function renderDetails(){
+  const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
+  $('detailCount').textContent=sorted.length+' combinações';
+  $('detailRows').innerHTML=sorted.map(r=>`<tr><td><b>${r.representante}</b><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(r.realizado+r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+}
+function drawMonthly(){
+  const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};let series=data.mensal;
+  const max=Math.max(1,...series.flatMap(x=>[x.meta,x.realizado+x.carteira]))*1.08,bw=(W-p.l-p.r)/12,y=v=>H-p.b-v*(H-p.t-p.b)/max;
+  let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-7}" y="${yy+3}" text-anchor="end">${(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:0})}m</text>`}
+  series.forEach((r,i)=>{const x=p.l+i*bw+bw*.13,w=bw*.32;h+=`<rect class="goalbar" x="${x}" y="${y(r.meta)}" width="${w}" height="${H-p.b-y(r.meta)}" rx="3"/><rect class="realbar" x="${x+w+3}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" rx="3"/>`;if(r.carteira)h+=`<rect class="walletbar" x="${x+w+3}" y="${y(r.realizado+r.carteira)}" width="${w}" height="${y(r.realizado)-y(r.realizado+r.carteira)}" rx="2"/>`;h+=`<text class="axis" x="${x+w}" y="${H-13}" text-anchor="middle">${r.nome}</text>`});svg.innerHTML=h;
+}
+function drawDaily(){
+  const series=data.carteiraDiaria,svg=$('dailyChart'),W=1000,H=350,p={l:70,r:18,t:18,b:40};if(!series.length){svg.innerHTML='';return}
+  const max=Math.max(1,...series.flatMap(x=>[x.realizado,x.carteira]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(series.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max,path=k=>series.map((r,i)=>(i?'L':'M')+x(i)+','+y(r[k])).join(' ');
+  let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${compact(v).replace('R$ ','')}</text>`}
+  [0,Math.floor((series.length-1)/2),series.length-1].forEach(i=>h+=`<text class="axis" x="${x(i)}" y="${H-14}" text-anchor="middle">${series[i].data.slice(8,10)}/07</text>`);
+  svg.innerHTML=h+`<path class="salesline" d="${path('realizado')}"/><path class="walletline" d="${path('carteira')}"/>`;
+}
+function selectPeriod(){
+  period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
+}
+function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('commercial-theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Claro':'🌙 Escuro'}
+$('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
+$('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
+$('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();render()};
 
-function renderCards(items,clickable=true){
-  els.contracts.innerHTML=items.map(c=>`<article class="card contract${c.contrato===selectedContract&&mode==='contract'?' active':''}" data-contract="${c.contrato}">
-    <h2>${c.contrato}</h2><div class="metric"><span>Realizado</span><b>${money(c.realizado)}</b></div>
-    <div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
-  if(clickable)els.contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectContract(x.dataset.contract));
-}
-function renderRegionCards(){
-  els.contracts.innerHTML=data.regioes.map(r=>`<article class="card contract${r.regiao===selectedRegion?.regiao?' active':''}" data-region="${r.regiao}">
-    <h2>${r.regiao}</h2><div class="metric"><span>Realizado</span><b>${money(r.realizado)}</b></div>
-    <div class="metric"><span>Carteira</span><b>${money(r.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(r.potencial)}</b></div></article>`).join('');
-  els.contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectRegion(x.dataset.region));
-}
-function selectRegion(name){
-  selectedRegion=data.regioes.find(x=>x.regiao===name)||data.regioes[0];
-  els.regionSelect.value=selectedRegion.regiao;setTotals(selectedRegion.realizado,selectedRegion.carteira);
-  if(mode==='region'){renderRegionCards();draw(regionRows(selectedRegion),`Evolução acumulada · ${selectedRegion.regiao}`,selectedRegion.regiao)}
-  else populateRepresentatives();
-}
-function populateRepresentatives(){
-  const reps=selectedRegion.representantes;
-  els.repSelect.innerHTML=reps.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
-  selectRepresentative(reps.some(r=>String(r.id)===String(selectedRep?.id))?selectedRep.id:reps[0].id);
-}
-function selectContract(contract){
-  selectedContract=contract;const item=data.contratos.find(x=>x.contrato===contract);setTotals(data.totais.realizado,data.totais.carteira);
-  renderCards(data.contratos,true);draw(contractRows(contract),`Evolução acumulada · ${contract}`,contract);
-}
-function selectRepresentative(id){
-  const reps=selectedRegion.representantes;
-  selectedRep=reps.find(x=>String(x.id)===String(id))||reps[0];
-  els.repSelect.value=String(selectedRep.id);setTotals(selectedRep.realizado,selectedRep.carteira);renderCards(selectedRep.contratos,false);
-  draw(repRows(selectedRep),`Evolução acumulada · ${selectedRep.nome}`,`${selectedRep.nome} · ${selectedRep.id}`);
-}
-function setMode(next){
-  mode=next;els.regionView.classList.toggle('active',mode==='region');els.contractView.classList.toggle('active',mode==='contract');els.repView.classList.toggle('active',mode==='rep');
-  els.regionSelect.classList.toggle('hidden',mode!=='rep');els.repSelect.classList.toggle('hidden',mode!=='rep');
-  if(mode==='region')selectRegion(selectedRegion?.regiao||data.regioes[0].regiao);
-  else if(mode==='contract')selectContract(selectedContract);
-  else selectRegion(selectedRegion?.regiao||data.regioes[0].regiao);
-}
-
-function draw(rows,title,label){
-  currentRows=rows;const svg=els.chart,W=1000,H=330,p={l:75,r:25,t:20,b:38};
-  const max=Math.max(1,...rows.flatMap(x=>[x.real,x.wallet]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max;
-  const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(r[k]).toFixed(1)).join(' ');
-  let html='';for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$ ','')}</text>`}
-  [0,7,14,21,30].forEach(i=>html+=`<text class="axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${day(rows[i].date)}</text>`);
-  html+=`<path class="sales" d="${path('real')}"/><path class="wallet" d="${path('wallet')}"/><g id="hoverLayer"></g>`;
-  svg.innerHTML=html;svg._chart={W,H,p,x,y,max};els.chartTitle.textContent=title;els.tableTitle.textContent=label;
-  els.dailyRows.innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
-}
-function showTooltip(event){
-  if(!currentRows.length)return;const rect=els.chart.getBoundingClientRect(),cfg=els.chart._chart;
-  const svgX=(event.clientX-rect.left)*cfg.W/rect.width,index=Math.max(0,Math.min(currentRows.length-1,Math.round((svgX-cfg.p.l)*(currentRows.length-1)/(cfg.W-cfg.p.l-cfg.p.r))));
-  const row=currentRows[index],xx=cfg.x(index),yr=cfg.y(row.real),yw=cfg.y(row.wallet);
-  byId('hoverLayer').innerHTML=`<line class="hover-line" x1="${xx}" y1="${cfg.p.t}" x2="${xx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-dot" cx="${xx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-dot" cx="${xx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
-  els.tooltip.innerHTML=`<strong>${day(row.date)}</strong><div class="tooltip-row"><span>Realizado</span><b>${money2(row.real)}</b></div><div class="tooltip-row"><span>Carteira</span><b>${money2(row.wallet)}</b></div>`;
-  els.tooltip.style.display='block';const left=Math.min(els.chartWrap.clientWidth-els.tooltip.offsetWidth-8,Math.max(8,event.clientX-rect.left+14)),top=Math.max(6,event.clientY-rect.top-els.tooltip.offsetHeight-12);els.tooltip.style.left=left+'px';els.tooltip.style.top=top+'px';
-}
-els.chart.addEventListener('mousemove',showTooltip);els.chart.addEventListener('mouseleave',()=>{els.tooltip.style.display='none';byId('hoverLayer').innerHTML=''});
-
-function applyTheme(theme){
-  document.documentElement.dataset.theme=theme;localStorage.setItem('dashboard-theme',theme);els.themeBtn.textContent=theme==='dark'?'☀️ Claro':'🌙 Escuro';
-}
-els.themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
-applyTheme(localStorage.getItem('dashboard-theme')||'light');
-els.regionView.onclick=()=>setMode('region');els.contractView.onclick=()=>setMode('contract');els.repView.onclick=()=>setMode('rep');
-els.regionSelect.onchange=e=>selectRegion(e.target.value);els.repSelect.onchange=e=>selectRepresentative(e.target.value);
-
-fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
-  data=payload;els.stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
-  els.regionSelect.innerHTML=data.regioes.map(r=>`<option value="${r.regiao}">${r.regiao}</option>`).join('');
-  els.sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('region');
-}).catch(error=>{console.error(error);els.stamp.textContent='Erro: '+error.message});
+fetch('dados-gerenciais.json?v=1').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+  data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
+  $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
+  $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
+  period=data.periodos[0];updateRepOptions();render();$('loading').style.display='none';
+}).catch(e=>{$('loading').textContent='Erro: '+e.message});
 </script>
 </body>
 </html>
