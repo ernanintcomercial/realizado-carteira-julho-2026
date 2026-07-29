@@ -1,0 +1,405 @@
+{
+  "titulo": "Realizado x Carteira â€” Julho 2026",
+  "periodo": {
+    "inicio": "2026-07-01",
+    "fim": "2026-07-28"
+  },
+  "geradoEm": "2026-07-29 09:26",
+  "totais": {
+    "realizado": 7666863.04,
+    "carteira": 2287622.28,
+    "potencial": 9954485.32
+  },
+  "contratos": [
+    {
+      "contrato": "ALUMÃNIO",
+      "realizado": 5458684.82,
+      "carteira": 1198945.02,
+      "potencial": 6657629.84,
+      "participacaoCarteira": 0.180086,
+      "diferencaVerificacao": -6807.55
+    },
+    {
+      "contrato": "PLÃSTICO",
+      "realizado": 1662133.28,
+      "carteira": 898651.08,
+      "potencial": 2560784.36,
+      "participacaoCarteira": 0.350928,
+      "diferencaVerificacao": 6807.55
+    },
+    {
+      "contrato": "LED",
+      "realizado": 343291.38,
+      "carteira": 86760.73,
+      "potencial": 430052.11,
+      "participacaoCarteira": 0.201745,
+      "diferencaVerificacao": 0.0
+    },
+    {
+      "contrato": "EX",
+      "realizado": 202753.56,
+      "carteira": 103265.45,
+      "potencial": 306019.01,
+      "participacaoCarteira": 0.337448,
+      "diferencaVerificacao": 0.0
+    }
+  ],
+  "serieDiaria": [
+    {
+      "data": "2026-07-01",
+      "aluminio_realizado": 184134.69,
+      "aluminio_carteira": 54452.51,
+      "plastico_realizado": 44550.62,
+      "plastico_carteira": 12324.9,
+      "led_realizado": 947.8,
+      "led_carteira": 0.0,
+      "ex_realizado": 0.0,
+      "ex_carteira": 0.0
+    },
+    {
+      "data": "2026-07-02",
+      "aluminio_realizado": 609926.58,
+      "aluminio_carteira": 266646.39,
+      "plastico_realizado": 241778.07,
+      "plastico_carteira": 117164.48,
+      "led_realizado": 26287.12,
+      "led_carteira": 0.0,
+      "ex_realizado": 0.0,
+      "ex_carteira": 0.0
+    },
+    {
+      "data": "2026-07-03",
+      "aluminio_realizado": 695996.53,
+      "aluminio_carteira": 268276.53,
+      "plastico_realizado": 274354.63,
+      "plastico_carteira": 135140.89,
+      "led_realizado": 82275.72,
+      "led_carteira": 0.0,
+      "ex_realizado": 70457.51,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-04",
+      "aluminio_realizado": 695996.53,
+      "aluminio_carteira": 268276.53,
+      "plastico_realizado": 277389.43,
+      "plastico_carteira": 136448.84,
+      "led_realizado": 82275.72,
+      "led_carteira": 0.0,
+      "ex_realizado": 70457.51,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-05",
+      "aluminio_realizado": 711018.67,
+      "aluminio_carteira": 268276.53,
+      "plastico_realizado": 277389.43,
+      "plastico_carteira": 136448.84,
+      "led_realizado": 82275.72,
+      "led_carteira": 0.0,
+      "ex_realizado": 70457.51,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-06",
+      "aluminio_realizado": 825654.2,
+      "aluminio_carteira": 285356.07,
+      "plastico_realizado": 316396.75,
+      "plastico_carteira": 144755.98,
+      "led_realizado": 98379.19,
+      "led_carteira": 0.0,
+      "ex_realizado": 70457.51,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-07",
+      "aluminio_realizado": 871298.38,
+      "aluminio_carteira": 285602.67,
+      "plastico_realizado": 370017.69,
+      "plastico_carteira": 162782.48,
+      "led_realizado": 98379.19,
+      "led_carteira": 0.0,
+      "ex_realizado": 71029.67,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-08",
+      "aluminio_realizado": 1224293.52,
+      "aluminio_carteira": 297134.02,
+      "plastico_realizado": 430733.01,
+      "plastico_carteira": 190491.34,
+      "led_realizado": 105978.47,
+      "led_carteira": 0.0,
+      "ex_realizado": 71029.67,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-09",
+      "aluminio_realizado": 1417185.17,
+      "aluminio_carteira": 312802.87,
+      "plastico_realizado": 564163.46,
+      "plastico_carteira": 238626.93,
+      "led_realizado": 105978.47,
+      "led_carteira": 0.0,
+      "ex_realizado": 71029.67,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-10",
+      "aluminio_realizado": 1536607.05,
+      "aluminio_carteira": 328983.59,
+      "plastico_realizado": 620334.58,
+      "plastico_carteira": 251082.56,
+      "led_realizado": 182758.41,
+      "led_carteira": 19622.0,
+      "ex_realizado": 71328.49,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-11",
+      "aluminio_realizado": 1572927.91,
+      "aluminio_carteira": 329775.99,
+      "plastico_realizado": 631449.83,
+      "plastico_carteira": 259497.44,
+      "led_realizado": 182758.41,
+      "led_carteira": 19622.0,
+      "ex_realizado": 71328.49,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-12",
+      "aluminio_realizado": 1572927.91,
+      "aluminio_carteira": 329775.99,
+      "plastico_realizado": 635268.47,
+      "plastico_carteira": 259497.44,
+      "led_realizado": 182758.41,
+      "led_carteira": 19622.0,
+      "ex_realizado": 71328.49,
+      "ex_carteira": 5064.91
+    },
+    {
+      "data": "2026-07-13",
+      "aluminio_realizado": 3164685.86,
+      "aluminio_carteira": 494907.85,
+      "plastico_realizado": 690789.14,
+      "plastico_carteira": 297188.57,
+      "led_realizado": 182758.41,
+      "led_carteira": 19622.0,
+      "ex_realizado": 106939.81,
+      "ex_carteira": 17429.48
+    },
+    {
+      "data": "2026-07-14",
+      "aluminio_realizado": 3272132.09,
+      "aluminio_carteira": 525852.03,
+      "plastico_realizado": 813337.77,
+      "plastico_carteira": 348781.75,
+      "led_realizado": 200123.13,
+      "led_carteira": 19622.0,
+      "ex_realizado": 108560.58,
+      "ex_carteira": 19050.25
+    },
+    {
+      "data": "2026-07-15",
+      "aluminio_realizado": 3623173.25,
+      "aluminio_carteira": 654740.71,
+      "plastico_realizado": 921742.27,
+      "plastico_carteira": 401395.76,
+      "led_realizado": 265164.59,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-16",
+      "aluminio_realizado": 3683931.08,
+      "aluminio_carteira": 658018.21,
+      "plastico_realizado": 982376.68,
+      "plastico_carteira": 429586.86,
+      "led_realizado": 265164.59,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-17",
+      "aluminio_realizado": 3788259.66,
+      "aluminio_carteira": 663601.18,
+      "plastico_realizado": 1090838.94,
+      "plastico_carteira": 506961.22,
+      "led_realizado": 265164.59,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-18",
+      "aluminio_realizado": 3813719.54,
+      "aluminio_carteira": 663601.18,
+      "plastico_realizado": 1110193.43,
+      "plastico_carteira": 517559.6,
+      "led_realizado": 265164.59,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-19",
+      "aluminio_realizado": 3848329.05,
+      "aluminio_carteira": 698210.69,
+      "plastico_realizado": 1130558.6,
+      "plastico_carteira": 535660.95,
+      "led_realizado": 265164.59,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-20",
+      "aluminio_realizado": 4032488.59,
+      "aluminio_carteira": 806072.73,
+      "plastico_realizado": 1207558.28,
+      "plastico_carteira": 576371.43,
+      "led_realizado": 290229.7,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123589.24,
+      "ex_carteira": 26485.35
+    },
+    {
+      "data": "2026-07-21",
+      "aluminio_realizado": 4321129.14,
+      "aluminio_carteira": 992630.35,
+      "plastico_realizado": 1250741.32,
+      "plastico_carteira": 610842.03,
+      "led_realizado": 295327.63,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123671.65,
+      "ex_carteira": 26567.76
+    },
+    {
+      "data": "2026-07-22",
+      "aluminio_realizado": 4469854.75,
+      "aluminio_carteira": 998624.95,
+      "plastico_realizado": 1314622.71,
+      "plastico_carteira": 642510.34,
+      "led_realizado": 295327.63,
+      "led_carteira": 73419.71,
+      "ex_realizado": 123671.65,
+      "ex_carteira": 26567.76
+    },
+    {
+      "data": "2026-07-23",
+      "aluminio_realizado": 4565385.5,
+      "aluminio_carteira": 999474.7,
+      "plastico_realizado": 1339929.16,
+      "plastico_carteira": 658654.33,
+      "led_realizado": 310244.02,
+      "led_carteira": 73419.71,
+      "ex_realizado": 137078.92,
+      "ex_carteira": 37590.81
+    },
+    {
+      "data": "2026-07-24",
+      "aluminio_realizado": 4841006.5,
+      "aluminio_carteira": 1026213.12,
+      "plastico_realizado": 1379172.07,
+      "plastico_carteira": 680228.64,
+      "led_realizado": 310244.02,
+      "led_carteira": 73419.71,
+      "ex_realizado": 197109.77,
+      "ex_carteira": 97621.66
+    },
+    {
+      "data": "2026-07-25",
+      "aluminio_realizado": 4841006.5,
+      "aluminio_carteira": 1026213.12,
+      "plastico_realizado": 1379172.07,
+      "plastico_carteira": 680228.64,
+      "led_realizado": 310244.02,
+      "led_carteira": 73419.71,
+      "ex_realizado": 197109.77,
+      "ex_carteira": 97621.66
+    },
+    {
+      "data": "2026-07-26",
+      "aluminio_realizado": 4841006.5,
+      "aluminio_carteira": 1026213.12,
+      "plastico_realizado": 1379867.7,
+      "plastico_carteira": 680228.64,
+      "led_realizado": 310244.02,
+      "led_carteira": 73419.71,
+      "ex_realizado": 197109.77,
+      "ex_carteira": 97621.66
+    },
+    {
+      "data": "2026-07-27",
+      "aluminio_realizado": 5292781.54,
+      "aluminio_carteira": 1088055.11,
+      "plastico_realizado": 1522280.21,
+      "plastico_carteira": 774297.54,
+      "led_realizado": 325560.97,
+      "led_carteira": 84130.55,
+      "ex_realizado": 202753.56,
+      "ex_carteira": 103265.45
+    },
+    {
+      "data": "2026-07-28",
+      "aluminio_realizado": 5458684.82,
+      "aluminio_carteira": 1198945.02,
+      "plastico_realizado": 1662133.28,
+      "plastico_carteira": 898651.08,
+      "led_realizado": 343291.38,
+      "led_carteira": 86760.73,
+      "ex_realizado": 202753.56,
+      "ex_carteira": 103265.45
+    },
+    {
+      "data": "2026-07-29",
+      "aluminio_realizado": 5458684.82,
+      "aluminio_carteira": 1198945.02,
+      "plastico_realizado": 1662133.28,
+      "plastico_carteira": 898651.08,
+      "led_realizado": 343291.38,
+      "led_carteira": 86760.73,
+      "ex_realizado": 202753.56,
+      "ex_carteira": 103265.45
+    },
+    {
+      "data": "2026-07-30",
+      "aluminio_realizado": 5458684.82,
+      "aluminio_carteira": 1198945.02,
+      "plastico_realizado": 1662133.28,
+      "plastico_carteira": 898651.08,
+      "led_realizado": 343291.38,
+      "led_carteira": 86760.73,
+      "ex_realizado": 202753.56,
+      "ex_carteira": 103265.45
+    },
+    {
+      "data": "2026-07-31",
+      "aluminio_realizado": 5458684.82,
+      "aluminio_carteira": 1198945.02,
+      "plastico_realizado": 1662133.28,
+      "plastico_carteira": 898651.08,
+      "led_realizado": 343291.38,
+      "led_carteira": 86760.73,
+      "ex_realizado": 202753.56,
+      "ex_carteira": 103265.45
+    }
+  ],
+  "verificacoes": {
+    "totalWWWPD010": 7666863.04,
+    "totalArquivoEnviado": 7666863.04,
+    "diferencaTotal": 0.0,
+    "valorReclassificadoEntreContratos": 6807.55,
+    "representantesForaINDEX": [
+      9958
+    ],
+    "status": "ATENÃ‡ÃƒO"
+  },
+  "fontes": [
+    "ExtraÃ§Ã£o em Tabela (27).xlsx â€” realizado, carteira e contrato",
+    "WWWPD010.xlsx â€” verificaÃ§Ã£o do realizado",
+    "INDEX.xlsx â€” verificaÃ§Ã£o cadastral dos representantes"
+  ]
+}
