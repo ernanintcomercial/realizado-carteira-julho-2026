@@ -5,36 +5,54 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Realizado x Carteira — Julho 2026</title>
   <style>
-    :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e6eaf0;--blue:#2563eb;--amber:#f59e0b;--green:#059669;--red:#dc2626}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif}
+    :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e6eaf0;--head:#172033;--blue:#2563eb;--amber:#f59e0b;--green:#059669;--shadow:#1018280a;--control:#fff}
+    html[data-theme="dark"]{--bg:#0d1320;--card:#151d2c;--ink:#f1f5f9;--muted:#9ca9bc;--line:#2a3548;--head:#080d16;--blue:#60a5fa;--amber:#fbbf24;--green:#34d399;--shadow:#0006;--control:#1d2738}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,Segoe UI,Arial,sans-serif;transition:background .2s,color .2s}
     main{max-width:1180px;margin:auto;padding:28px 18px 48px}
-    header{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}
+    header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}
     h1{font-size:25px;letter-spacing:-.5px;margin:0 0 4px}.subtitle{color:var(--muted)}
-    .stamp{text-align:right;color:var(--muted);font-size:12px}
+    .header-actions{display:flex;align-items:center;gap:12px}.stamp{text-align:right;color:var(--muted);font-size:12px}
+    button,select{font:inherit}.theme-btn,.view-btn{border:1px solid var(--line);background:var(--control);color:var(--ink);border-radius:9px;padding:9px 12px;cursor:pointer}
+    .theme-btn:hover,.view-btn:hover{border-color:var(--blue)}.theme-btn{white-space:nowrap}
+    .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.view-tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:11px}
+    .view-btn{border:0;padding:7px 12px;background:transparent}.view-btn.active{background:var(--blue);color:#fff}
+    #repSelect{min-width:310px;max-width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--control);color:var(--ink)}
+    .hidden{display:none!important}
     .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 10px #1018280a}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 10px var(--shadow)}
     .kpi{padding:18px}.kpi span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
     .kpi strong{display:block;font-size:25px;margin-top:6px}.blue{color:var(--blue)}.amber{color:var(--amber)}.green{color:var(--green)}
     .contracts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
     .contract{padding:16px;cursor:pointer;transition:.15s;border:2px solid transparent}.contract:hover,.contract.active{border-color:var(--blue);transform:translateY(-1px)}
-    .contract h2{font-size:14px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;margin-top:7px}.metric span{color:var(--muted)}
+    .contract h2{font-size:14px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;gap:8px;margin-top:7px}.metric span{color:var(--muted)}
     .panel{padding:20px;margin-bottom:14px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
     .panel h2{font-size:16px;margin:0}.legend{display:flex;gap:14px;color:var(--muted);font-size:12px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
-    #chart{width:100%;height:330px;display:block}.grid{stroke:#e8edf4;stroke-width:1}.axis{fill:#667085;font-size:11px}.sales{fill:none;stroke:var(--blue);stroke-width:3}.wallet{fill:none;stroke:var(--amber);stroke-width:3}
-    .warning{display:none;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;margin-bottom:14px}
-    .warning.show{display:block}
-    .table-wrap{overflow:auto;max-height:410px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:#172033;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .chart-wrap{position:relative}#chart{width:100%;height:330px;display:block;cursor:crosshair}.grid{stroke:var(--line);stroke-width:1}.axis{fill:var(--muted);font-size:11px}.sales{fill:none;stroke:var(--blue);stroke-width:3}.wallet{fill:none;stroke:var(--amber);stroke-width:3}.hover-line{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}.hover-dot{stroke:var(--card);stroke-width:3}
+    .tooltip{position:absolute;z-index:3;pointer-events:none;display:none;min-width:190px;background:var(--head);color:#fff;border-radius:9px;padding:10px 12px;box-shadow:0 8px 30px #0004;font-size:12px}
+    .tooltip strong{display:block;margin-bottom:5px}.tooltip-row{display:flex;justify-content:space-between;gap:14px;margin-top:3px}
+    .table-wrap{overflow:auto;max-height:410px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--head);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
     footer{color:var(--muted);font-size:12px;margin-top:16px}
-    @media(max-width:800px){header{align-items:start;flex-direction:column}.stamp{text-align:left}.kpis{grid-template-columns:1fr}.contracts{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:480px){main{padding:20px 10px}.contracts{grid-template-columns:1fr}.kpi strong{font-size:22px}}
+    @media(max-width:800px){header{align-items:flex-start;flex-direction:column}.header-actions{width:100%;justify-content:space-between}.stamp{text-align:left}.kpis{grid-template-columns:1fr}.contracts{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:480px){main{padding:20px 10px}.contracts{grid-template-columns:1fr}.kpi strong{font-size:22px}.header-actions{align-items:flex-start}.controls{align-items:stretch}.view-tabs{width:100%}.view-btn{flex:1}#repSelect{min-width:0;width:100%}}
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div><h1>Realizado x Carteira</h1><div class="subtitle">Julho de 2026 · acumulado diário por contrato</div></div>
-    <div class="stamp" id="stamp">Carregando…</div>
+    <div><h1>Realizado x Carteira</h1><div class="subtitle">Julho de 2026 · acumulado diário</div></div>
+    <div class="header-actions">
+      <div class="stamp" id="stamp">Carregando…</div>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Alternar tema">🌙 Escuro</button>
+    </div>
   </header>
+
+  <section class="controls">
+    <div class="view-tabs" aria-label="Tipo de visão">
+      <button class="view-btn active" id="contractView" type="button">Por contrato</button>
+      <button class="view-btn" id="repView" type="button">Por representante</button>
+    </div>
+    <select id="repSelect" class="hidden" aria-label="Selecionar representante"></select>
+  </section>
 
   <section class="kpis">
     <article class="card kpi"><span>Realizado acumulado</span><strong class="blue" id="totalReal">—</strong></article>
@@ -42,15 +60,17 @@
     <article class="card kpi"><span>Potencial comercial</span><strong class="green" id="totalPotencial">—</strong></article>
   </section>
 
-  <div class="warning" id="warning"></div>
   <section class="contracts" id="contracts"></section>
 
   <section class="card panel">
     <div class="panel-head">
       <h2 id="chartTitle">Evolução acumulada</h2>
-      <div class="legend"><span><i class="dot" style="background:#2563eb"></i>Realizado</span><span><i class="dot" style="background:#f59e0b"></i>Carteira</span></div>
+      <div class="legend"><span><i class="dot" style="background:var(--blue)"></i>Realizado</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div>
     </div>
-    <svg id="chart" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-label="Gráfico acumulado diário"></svg>
+    <div class="chart-wrap" id="chartWrap">
+      <svg id="chart" viewBox="0 0 1000 330" preserveAspectRatio="none" aria-label="Gráfico acumulado diário"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
   </section>
 
   <section class="card panel">
@@ -67,37 +87,72 @@
 </main>
 <script>
 const money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const money2=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
 const day=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace('ç','c');
-let data,selected='ALUMÍNIO';
+let data,mode='contract',selectedContract='ALUMÍNIO',selectedRep=null,currentRows=[];
+const els={real:document.getElementById('totalReal'),wallet:document.getElementById('totalCarteira'),potential:document.getElementById('totalPotencial')};
 
-function draw(contract){
-  selected=contract;
-  document.querySelectorAll('.contract').forEach(x=>x.classList.toggle('active',x.dataset.contract===contract));
-  const key=slug(contract), rows=data.serieDiaria.map(x=>({date:x.data,real:x[key+'_realizado'],wallet:x[key+'_carteira']}));
-  const svg=document.getElementById('chart'), W=1000,H=330,p={l:75,r:25,t:20,b:38};
-  const max=Math.max(1,...rows.flatMap(x=>[x.real,x.wallet]))*1.08;
-  const x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1), y=v=>H-p.b-v*(H-p.t-p.b)/max;
-  const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(r[k]).toFixed(1)).join(' ');
-  let html='';
-  for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$ ','')}</text>`}
-  [0,7,14,21,30].forEach(i=>html+=`<text class="axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${day(rows[i].date)}</text>`);
-  html+=`<path class="sales" d="${path('real')}"/><path class="wallet" d="${path('wallet')}"/>`;
-  svg.innerHTML=html;
-  document.getElementById('chartTitle').textContent=`Evolução acumulada · ${contract}`;
-  document.getElementById('tableTitle').textContent=contract;
-  document.getElementById('dailyRows').innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
+function setTotals(real,wallet){
+  els.real.textContent=money(real);els.wallet.textContent=money(wallet);els.potential.textContent=money(real+wallet);
+}
+function contractRows(contract){
+  const key=slug(contract);
+  return data.serieDiaria.map(x=>({date:x.data,real:x[key+'_realizado'],wallet:x[key+'_carteira']}));
+}
+function repRows(rep){return rep.serieDiaria.map(x=>({date:x.data,real:x.realizado,wallet:x.carteira}))}
+
+function renderCards(items,clickable=true){
+  contracts.innerHTML=items.map(c=>`<article class="card contract${c.contrato===selectedContract&&mode==='contract'?' active':''}" data-contract="${c.contrato}">
+    <h2>${c.contrato}</h2><div class="metric"><span>Realizado</span><b>${money(c.realizado)}</b></div>
+    <div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
+  if(clickable)contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>selectContract(x.dataset.contract));
+}
+function selectContract(contract){
+  selectedContract=contract;const item=data.contratos.find(x=>x.contrato===contract);setTotals(data.totais.realizado,data.totais.carteira);
+  renderCards(data.contratos,true);draw(contractRows(contract),`Evolução acumulada · ${contract}`,contract);
+}
+function selectRepresentative(id){
+  selectedRep=data.representantes.find(x=>String(x.id)===String(id))||data.representantes[0];
+  repSelect.value=String(selectedRep.id);setTotals(selectedRep.realizado,selectedRep.carteira);renderCards(selectedRep.contratos,false);
+  draw(repRows(selectedRep),`Evolução acumulada · ${selectedRep.nome}`,`${selectedRep.nome} · ${selectedRep.id}`);
+}
+function setMode(next){
+  mode=next;contractView.classList.toggle('active',mode==='contract');repView.classList.toggle('active',mode==='rep');repSelect.classList.toggle('hidden',mode!=='rep');
+  if(mode==='contract')selectContract(selectedContract);else selectRepresentative(selectedRep?.id||data.representantes[0].id);
 }
 
+function draw(rows,title,label){
+  currentRows=rows;const svg=document.getElementById('chart'),W=1000,H=330,p={l:75,r:25,t:20,b:38};
+  const max=Math.max(1,...rows.flatMap(x=>[x.real,x.wallet]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(rows.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max;
+  const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(r[k]).toFixed(1)).join(' ');
+  let html='';for(let i=0;i<=4;i++){const val=max*i/4,yy=y(val);html+=`<line class="grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-10}" y="${yy+4}" text-anchor="end">${money(val).replace('R$ ','')}</text>`}
+  [0,7,14,21,30].forEach(i=>html+=`<text class="axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${day(rows[i].date)}</text>`);
+  html+=`<path class="sales" d="${path('real')}"/><path class="wallet" d="${path('wallet')}"/><g id="hoverLayer"></g>`;
+  svg.innerHTML=html;svg._chart={W,H,p,x,y,max};chartTitle.textContent=title;tableTitle.textContent=label;
+  dailyRows.innerHTML=rows.map(r=>`<tr><td>${day(r.date)}</td><td>${money(r.real)}</td><td>${money(r.wallet)}</td><td>${money(r.real+r.wallet)}</td></tr>`).join('');
+}
+function showTooltip(event){
+  if(!currentRows.length)return;const rect=chart.getBoundingClientRect(),cfg=chart._chart;
+  const svgX=(event.clientX-rect.left)*cfg.W/rect.width,index=Math.max(0,Math.min(currentRows.length-1,Math.round((svgX-cfg.p.l)*(currentRows.length-1)/(cfg.W-cfg.p.l-cfg.p.r))));
+  const row=currentRows[index],xx=cfg.x(index),yr=cfg.y(row.real),yw=cfg.y(row.wallet);
+  hoverLayer.innerHTML=`<line class="hover-line" x1="${xx}" y1="${cfg.p.t}" x2="${xx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-dot" cx="${xx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-dot" cx="${xx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
+  tooltip.innerHTML=`<strong>${day(row.date)}</strong><div class="tooltip-row"><span>Realizado</span><b>${money2(row.real)}</b></div><div class="tooltip-row"><span>Carteira</span><b>${money2(row.wallet)}</b></div>`;
+  tooltip.style.display='block';const left=Math.min(chartWrap.clientWidth-tooltip.offsetWidth-8,Math.max(8,event.clientX-rect.left+14)),top=Math.max(6,event.clientY-rect.top-tooltip.offsetHeight-12);tooltip.style.left=left+'px';tooltip.style.top=top+'px';
+}
+chart.addEventListener('mousemove',showTooltip);chart.addEventListener('mouseleave',()=>{tooltip.style.display='none';hoverLayer.innerHTML=''});
+
+function applyTheme(theme){
+  document.documentElement.dataset.theme=theme;localStorage.setItem('dashboard-theme',theme);themeBtn.textContent=theme==='dark'?'☀️ Claro':'🌙 Escuro';
+}
+themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+applyTheme(localStorage.getItem('dashboard-theme')||'light');
+contractView.onclick=()=>setMode('contract');repView.onclick=()=>setMode('rep');repSelect.onchange=e=>selectRepresentative(e.target.value);
+
 fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
-  data=payload;
-  totalReal.textContent=money(data.totais.realizado); totalCarteira.textContent=money(data.totais.carteira); totalPotencial.textContent=money(data.totais.potencial);
-  stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
-  contracts.innerHTML=data.contratos.map(c=>`<article class="card contract" data-contract="${c.contrato}"><h2>${c.contrato}</h2><div class="metric"><span>Realizado</span><b>${money(c.realizado)}</b></div><div class="metric"><span>Carteira</span><b>${money(c.carteira)}</b></div><div class="metric"><span>Potencial</span><b>${money(c.potencial)}</b></div></article>`).join('');
-  contracts.querySelectorAll('.contract').forEach(x=>x.onclick=()=>draw(x.dataset.contract));
-  if(data.verificacoes.status!=='OK'){warning.classList.add('show');warning.textContent=`Conciliação: total realizado fecha com WWWPD010. R$ ${data.verificacoes.valorReclassificadoEntreContratos.toLocaleString('pt-BR',{minimumFractionDigits:2})} aparece classificado entre Plástico e Alumínio de forma diferente nas duas fontes. Representante fora do INDEX: ${data.verificacoes.representantesForaINDEX.join(', ')}.`}
-  sources.textContent='Fontes: '+data.fontes.join(' · ');
-  draw(selected);
+  data=payload;stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
+  repSelect.innerHTML=data.representantes.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
+  sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('contract');
 }).catch(()=>{stamp.textContent='Erro ao carregar dados-julho.json'});
 </script>
 </body>
