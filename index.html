@@ -186,9 +186,9 @@ function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.set
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
 $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
-$('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();render()};
+$('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';render()};
 
-fetch('dados-gerenciais.json?v=2').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=3').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
@@ -197,3 +197,4 @@ fetch('dados-gerenciais.json?v=2').then(r=>{if(!r.ok)throw Error('dados-gerencia
 </script>
 </body>
 </html>
+
