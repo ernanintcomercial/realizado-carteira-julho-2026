@@ -43,7 +43,7 @@
     <div class="field"><label>Período</label><select class="control" id="periodSelect"></select></div>
     <div class="field"><label>Região</label><select class="control" id="regionSelect"><option value="">Todas as regiões</option></select></div>
     <div class="field"><label>Contrato</label><select class="control" id="contractSelect"><option value="">Todos os contratos</option></select></div>
-    <div class="field"><label>Representante</label><select class="control" id="repSelect"><option value="">Todos os representantes</option></select></div>
+    <div class="field"><label>Representante</label><input class="control" id="repSearch" list="repOptions" placeholder="Digite nome ou código"><datalist id="repOptions"></datalist><input type="hidden" id="repSelect"></div>
     <button class="btn" id="clearBtn">Limpar filtros</button>
   </section>
 
@@ -91,7 +91,7 @@
 const $=id=>document.getElementById(id), money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const compact=v=>{const a=Math.abs(v||0);return a>=1e6?'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e3?'R$ '+(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil':money(v)};
 const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]||0),0);
-let data,period,rows=[];
+let data,period,rows=[],repChoices=[];
 const aggregate=(items,keys)=>{const map=new Map();items.forEach(r=>{const id=keys.map(k=>r[k]).join('|');if(!map.has(id))map.set(id,Object.fromEntries(keys.map(k=>[k,r[k]])));const x=map.get(id);['meta','realizado','carteira'].forEach(k=>x[k]=(x[k]||0)+(r[k]||0))});return [...map.values()]};
 const pill=p=>`<span class="pill ${p>=100?'good':p>=80?'warn':'bad'}">${p.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`;
 
@@ -105,9 +105,24 @@ function matchesFilters(r){
 }
 function updateRepOptions(){
   const region=$('regionSelect').value,old=$('repSelect').value;
-  const reps=aggregate(period.registros.filter(r=>!region||r.regiao===region),['repId','representante']).sort((a,b)=>a.representante.localeCompare(b.representante));
-  $('repSelect').innerHTML='<option value="">Todos os representantes</option>'+reps.map(r=>`<option value="${r.repId}">${r.representante} · ${r.repId}</option>`).join('');
-  if(reps.some(r=>String(r.repId)===old))$('repSelect').value=old;
+  repChoices=aggregate(period.registros.filter(r=>!region||r.regiao===region),['repId','representante']).sort((a,b)=>a.representante.localeCompare(b.representante));
+  $('repOptions').innerHTML=repChoices.map(r=>`<option value="${r.representante} · ${r.repId}"></option>`).join('');
+  const selected=repChoices.find(r=>String(r.repId)===old);
+  $('repSelect').value=selected?String(selected.repId):'';
+  $('repSearch').value=selected?`${selected.representante} · ${selected.repId}`:'';
+}
+function searchRepresentative(){
+  const query=$('repSearch').value.trim().toLocaleLowerCase('pt-BR');
+  if(!query){$('repSelect').value='';render();return}
+  const matches=repChoices.filter(r=>{
+    const id=String(r.repId),name=r.representante.toLocaleLowerCase('pt-BR'),label=`${name} · ${id}`;
+    return id===query||name===query||label===query||name.includes(query)||id.startsWith(query);
+  });
+  if(matches.length===1){
+    const r=matches[0];$('repSelect').value=String(r.repId);
+    $('repSearch').value=`${r.representante} · ${r.repId}`;
+  }else $('repSelect').value='';
+  render();
 }
 function render(){
   rows=filteredRows();const meta=sum(rows,'meta'),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta);
@@ -195,16 +210,17 @@ function selectPeriod(){
   period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
 }
 function filterRepresentative(repId){
-  const option=[...$('repSelect').options].find(x=>x.value===String(repId));
-  if(option){$('repSelect').value=String(repId);render()}
+  const rep=repChoices.find(x=>String(x.repId)===String(repId));
+  if(rep){$('repSelect').value=String(rep.repId);$('repSearch').value=`${rep.representante} · ${rep.repId}`;render()}
 }
 function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('commercial-theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Claro':'🌙 Escuro'}
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
-$('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSelect').onchange=render;
-$('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';render()};
+$('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('repSearch').onchange=searchRepresentative;
+$('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
+$('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value='';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';$('repSearch').value='';render()};
 
-fetch('dados-gerenciais.json?v=6').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=7').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   $('regionSelect').innerHTML+=[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');$('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
