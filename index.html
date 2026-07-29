@@ -150,7 +150,7 @@ els.themeBtn.onclick=()=>applyTheme(document.documentElement.dataset.theme==='da
 applyTheme(localStorage.getItem('dashboard-theme')||'light');
 els.contractView.onclick=()=>setMode('contract');els.repView.onclick=()=>setMode('rep');els.repSelect.onchange=e=>selectRepresentative(e.target.value);
 
-fetch('dados-julho.json').then(r=>r.json()).then(payload=>{
+fetch('dados-julho.json?v=7e40db1').then(r=>r.json()).then(payload=>{
   data=payload;els.stamp.innerHTML=`Dados até <strong>${day(data.periodo.fim)}</strong><br>Gerado em ${data.geradoEm}`;
   els.repSelect.innerHTML=data.representantes.map(r=>`<option value="${r.id}">${r.nome} · ${r.id}</option>`).join('');
   els.sources.textContent='Fontes: '+data.fontes.join(' · ');setMode('contract');
