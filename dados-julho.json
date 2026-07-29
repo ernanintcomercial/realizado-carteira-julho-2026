@@ -1,5 +1,5 @@
 {
-  "titulo": "Realizado x Carteira â€” Julho 2026",
+  "titulo": "Realizado x Carteira — Julho 2026",
   "periodo": {
     "inicio": "2026-07-01",
     "fim": "2026-07-28"
@@ -12,7 +12,7 @@
   },
   "contratos": [
     {
-      "contrato": "ALUMÃNIO",
+      "contrato": "ALUMÍNIO",
       "realizado": 5458684.82,
       "carteira": 1198945.02,
       "potencial": 6657629.84,
@@ -20,7 +20,7 @@
       "diferencaVerificacao": -6807.55
     },
     {
-      "contrato": "PLÃSTICO",
+      "contrato": "PLÁSTICO",
       "realizado": 1662133.28,
       "carteira": 898651.08,
       "potencial": 2560784.36,
@@ -395,11 +395,11 @@
     "representantesForaINDEX": [
       9958
     ],
-    "status": "ATENÃ‡ÃƒO"
+    "status": "ATENÇÃO"
   },
   "fontes": [
-    "ExtraÃ§Ã£o em Tabela (27).xlsx â€” realizado, carteira e contrato",
-    "WWWPD010.xlsx â€” verificaÃ§Ã£o do realizado",
-    "INDEX.xlsx â€” verificaÃ§Ã£o cadastral dos representantes"
+    "Extração em Tabela (27).xlsx — realizado, carteira e contrato",
+    "WWWPD010.xlsx — verificação do realizado",
+    "INDEX.xlsx — verificação cadastral dos representantes"
   ]
 }
