@@ -10,6 +10,9 @@ O site mostra, por contrato:
 - realizado diário e acumulado;
 - carteira diária e acumulada;
 - potencial comercial (`realizado + carteira`);
+- alternância entre visão por contrato e por representante;
+- tema claro/escuro com preferência salva no navegador;
+- valores do gráfico exibidos ao passar o mouse;
 - conciliação do realizado com `WWWPD010.xlsx`;
 - verificação cadastral com `INDEX.xlsx`.
 
