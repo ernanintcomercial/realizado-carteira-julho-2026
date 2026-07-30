@@ -17,6 +17,10 @@
     .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.tab{border:0;background:transparent;color:var(--muted);padding:10px 15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600}.tab.active{color:var(--blue);border-color:var(--blue)}
     .view{display:none}.view.active{display:block}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
     .kpi{padding:17px}.kpi label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.kpi strong{display:block;font-size:22px;margin:7px 0 3px}.kpi small{color:var(--muted)}
+    .kpi.focus{background:linear-gradient(135deg,var(--card),var(--blue2));border-color:var(--blue)}
+    .pace{padding:17px;margin-bottom:14px}.pace-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:10px}.pace-title{font-weight:700}.pace-pcts{display:flex;gap:18px;text-align:right}.pace-pcts span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}.pace-pcts strong{font-size:17px}
+    .pace-rail{height:16px;position:relative;background:var(--line);border-radius:999px}.pace-real,.pace-wallet{position:absolute;top:0;bottom:0;left:0}.pace-real{background:var(--blue);border-radius:999px}.pace-wallet{background:var(--amber);border-radius:0 999px 999px 0}.pace-cut{position:absolute;top:-7px;width:2px;height:30px;background:var(--ink)}.pace-cut:before{content:"";position:absolute;left:-3px;top:-1px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+    .pace-legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}.pace-reading{margin-top:9px}.pace-reading b{color:var(--ink)}
     .blue{color:var(--blue)}.amber{color:var(--amber)}.green{color:var(--green)}.red{color:var(--red)}
     .main-grid{grid-template-columns:minmax(0,1.75fr) minmax(300px,.75fr);margin-bottom:14px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.panel h2{font-size:15px;margin:0}.legend{display:flex;gap:12px;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
     svg{width:100%;display:block}.gridline{stroke:var(--line);stroke-width:1}.axis{fill:var(--muted);font-size:10px}.goalbar{fill:var(--blue2)}.realbar{fill:var(--blue)}.walletbar{fill:var(--amber)}.salesline{fill:none;stroke:var(--blue);stroke-width:3}.walletline{fill:none;stroke:var(--amber);stroke-width:3}
@@ -28,7 +32,7 @@
     .daily-chart{height:350px}.note{font-size:12px;color:var(--muted);margin-top:12px}.loading{padding:70px;text-align:center;color:var(--muted)}
     footer{color:var(--muted);font-size:11px;margin-top:16px}
     @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.main-grid,.split{grid-template-columns:1fr}}
-    @media(max-width:760px){.app{padding:18px 10px}.kpis{grid-template-columns:repeat(2,1fr)}.regions{grid-template-columns:1fr}.field{flex:1 1 45%}.field select{width:100%;min-width:0}.header-right{align-items:flex-end;flex-direction:column}.tabs{overflow:auto}.tab{white-space:nowrap}}
+    @media(max-width:760px){.app{padding:18px 10px}.kpis{grid-template-columns:repeat(2,1fr)}.regions{grid-template-columns:1fr}.field{flex:1 1 45%}.field select{width:100%;min-width:0}.header-right{align-items:flex-end;flex-direction:column}.tabs{overflow:auto}.tab{white-space:nowrap}.pace-head{align-items:flex-start;flex-direction:column}.pace-pcts{text-align:left}}
     @media(max-width:430px){header{flex-direction:column}.header-right{width:100%;align-items:flex-start;text-align:left}.kpis{grid-template-columns:1fr}}
   </style>
 </head>
@@ -59,11 +63,22 @@
   <section class="view active" id="executive">
     <div class="grid kpis">
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
+      <article class="card kpi focus"><label>Meta até o corte</label><strong id="kCutMeta">—</strong><small id="kCutMetaNote">referência operacional diária</small></article>
       <article class="card kpi"><label>Total geral</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
-      <article class="card kpi"><label>Atingimento</label><strong id="kPct">—</strong><small>realizado ÷ meta</small></article>
       <article class="card kpi"><label>Carteira do período</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
+    <section class="card pace" aria-label="Régua de progresso do período">
+      <div class="pace-head">
+        <div><div class="pace-title">Ritmo comercial até o corte</div><div class="muted">A carteira já está incluída no Total Geral</div></div>
+        <div class="pace-pcts"><div><span>Meta até o corte</span><strong id="kCutPct">—</strong></div><div><span>Meta completa</span><strong id="kFullPct">—</strong></div></div>
+      </div>
+      <div class="pace-rail" id="paceRail" role="img" aria-label="">
+        <div class="pace-real" id="paceReal"></div><div class="pace-wallet" id="paceWallet"></div><div class="pace-cut" id="paceCut"></div>
+      </div>
+      <div class="pace-legend"><span><i class="dot" style="background:var(--blue)"></i>Realizado sem carteira</span><span><i class="dot" style="background:var(--amber)"></i>Carteira dentro do total</span><span><i class="dot" style="background:var(--ink)"></i>Meta até o corte</span></div>
+      <div class="pace-reading" id="paceReading"></div>
+    </section>
     <div class="grid main-grid">
       <article class="card panel"><div class="panel-head"><h2>Meta x total geral por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Realizado sem carteira</span><span><i class="dot" style="background:var(--amber)"></i>Carteira dentro do total</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
       <article class="card panel"><div class="panel-head"><h2>Leitura gerencial</h2></div><div class="insights" id="insights"></div></article>
@@ -103,6 +118,15 @@ function matchesFilters(r){
   const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
   return (!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!rep||String(r.repId)===rep);
 }
+function metaUntilCutoff(){
+  const currentMonth=+data.metaDiaria.mes,ratio=data.metaDiaria.diasUteisMes?data.metaDiaria.diasUteisTranscorridos/data.metaDiaria.diasUteisMes:0;
+  return (period.meses||[]).reduce((total,month)=>{
+    if(month>currentMonth)return total;
+    const monthPeriod=data.periodos.find(x=>x.id===`M${String(month).padStart(2,'0')}`);
+    const monthMeta=sum((monthPeriod?.registros||[]).filter(matchesFilters),'meta');
+    return total+monthMeta*(month===currentMonth?ratio:1);
+  },0);
+}
 function updateRepOptions(){
   const region=$('regionSelect').value,old=$('repSelect').value;
   repChoices=aggregate(period.registros.filter(r=>!region||r.regiao===region),['repId','representante']).sort((a,b)=>a.representante.localeCompare(b.representante));
@@ -125,11 +149,16 @@ function searchRepresentative(){
   render();
 }
 function render(){
-  rows=filteredRows();const meta=sum(rows,'meta'),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta);
+  rows=filteredRows();const meta=sum(rows,'meta'),cutMeta=metaUntilCutoff(),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta),cutPct=percent(real,cutMeta);
   $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWallet').textContent=money(wallet);
-  $('kPct').textContent=pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';$('kPct').className=pct>=100?'green':pct>=80?'amber':'red';
+  $('kCutMeta').textContent=money(cutMeta);$('kCutPct').textContent=cutMeta?cutPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';$('kFullPct').textContent=meta?pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';
   $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
   $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent='posição '+data.cortes.carteira;
+  const scale=Math.max(meta,real,cutMeta,1),realWidth=Math.min(100,100*real/scale),walletStart=Math.min(realWidth,100*Math.max(0,real-wallet)/scale),walletWidth=Math.max(0,realWidth-walletStart),cutPosition=Math.min(100,100*cutMeta/scale);
+  $('paceReal').style.width=realWidth+'%';$('paceWallet').style.left=walletStart+'%';$('paceWallet').style.width=walletWidth+'%';$('paceCut').style.left=`calc(${cutPosition}% - 1px)`;
+  const operationalGap=cutMeta-real;
+  $('paceReading').innerHTML=cutMeta?(operationalGap<=0?`<b>Ritmo acima do esperado:</b> o Total Geral supera a meta até o corte em ${money(-operationalGap)}.`:`<b>Ritmo abaixo do esperado:</b> faltam ${money(operationalGap)} para alcançar a meta até o corte.`):'<b>Sem meta operacional neste período.</b>';
+  $('paceRail').setAttribute('aria-label',`Total Geral ${money(real)}; carteira incluída ${money(wallet)}; meta até o corte ${money(cutMeta)}; meta completa ${money(meta)}.`);
   renderRegions();renderInsights(meta,real,wallet);renderRanking();renderContracts();renderDetails();drawMonthly();drawDaily();
 }
 function renderRegions(){
