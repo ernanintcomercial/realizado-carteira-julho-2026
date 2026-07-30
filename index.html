@@ -27,7 +27,7 @@
     .chart-shell{position:relative}.chart-tooltip{display:none;position:absolute;z-index:5;pointer-events:none;min-width:210px;padding:10px 12px;border-radius:9px;background:var(--nav);color:#fff;box-shadow:0 10px 35px #0005;font-size:12px}.chart-tooltip strong{display:block;margin-bottom:6px}.tip-row{display:flex;justify-content:space-between;gap:18px;margin-top:3px}.hover-guide{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}.hover-band{fill:var(--blue);opacity:.07}.hover-point{stroke:var(--card);stroke-width:3}
     .regions{grid-template-columns:repeat(3,1fr);margin-bottom:14px}.region{padding:16px}.region h3{font-size:13px;margin:0 0 12px}.metric{display:flex;justify-content:space-between;gap:8px;margin-top:6px}.metric span{color:var(--muted)}.progress{height:7px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:12px}.progress i{display:block;height:100%;background:var(--blue);border-radius:9px}
     .insights{display:grid;gap:9px}.insight{padding:11px;border-left:3px solid var(--blue);background:var(--bg);border-radius:7px}.insight.warn{border-color:var(--amber)}.insight.bad{border-color:var(--red)}
-    .split{grid-template-columns:1fr 1fr}.table-wrap{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;min-width:690px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--nav);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.04em;z-index:2}tbody tr:hover{background:var(--bg)}.rep-link{border:0;padding:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;text-align:left}.rep-link:hover{color:var(--blue);text-decoration:underline}
+    .split{grid-template-columns:1fr 1fr}.table-wrap{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;min-width:690px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:var(--nav);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.04em;z-index:2}tbody tr:hover{background:var(--bg)}.filter-link{border:0;padding:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;text-align:left}.filter-link:hover{color:var(--blue);text-decoration:underline}
     .pill{display:inline-block;padding:3px 8px;border-radius:20px;background:var(--blue2);color:var(--blue);font-weight:700;font-size:11px}.pill.good{background:#d1fae5;color:#047857}.pill.warn{background:#fef3c7;color:#b45309}.pill.bad{background:#fee2e2;color:#b91c1c}
     .daily-chart{height:350px}.note{font-size:12px;color:var(--muted);margin-top:12px}.loading{padding:70px;text-align:center;color:var(--muted)}
     footer{color:var(--muted);font-size:11px;margin-top:16px}
@@ -88,8 +88,8 @@
 
   <section class="view" id="performance">
     <div class="grid split">
-      <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">clique no representante para filtrar</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
-      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">clique no representante para filtrar ou remover o filtro</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2><span class="muted">clique no contrato para filtrar ou remover o filtro</span></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
     </div>
   </section>
 
@@ -177,16 +177,16 @@ function renderInsights(meta,real,wallet){
 }
 function renderRanking(){
   const agg=aggregate(rows,['repId','representante','regiao']).filter(x=>x.meta||x.realizado||x.carteira).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta)).slice(0,20);
-  $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="rep-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderContracts(){
   const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
-  $('contractRows').innerHTML=agg.map(r=>`<tr><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('contractRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterContract('${r.contrato}')">${r.contrato}</button></td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderDetails(){
   const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('detailCount').textContent=sorted.length+' combinações';
-  $('detailRows').innerHTML=sorted.map(r=>`<tr><td><button class="rep-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('detailRows').innerHTML=sorted.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function drawMonthly(){
   const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};
@@ -221,15 +221,20 @@ function tooltipPosition(event,svg,tip,shell){
   return {rect,svgX:(event.clientX-rect.left)*svg.viewBox.baseVal.width/rect.width};
 }
 function hideHover(tipId,layerId){$(tipId).style.display='none';const layer=$(layerId);if(layer)layer.innerHTML=''}
+function svgPointerX(event,svg){
+  const matrix=svg.getScreenCTM();
+  if(matrix){const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;return point.matrixTransform(matrix.inverse()).x}
+  const rect=svg.getBoundingClientRect();return (event.clientX-rect.left)*svg.viewBox.baseVal.width/rect.width;
+}
 function monthlyHover(event){
-  const svg=$('monthlyChart'),cfg=svg._hover,tip=$('monthlyTooltip'),rect=svg.getBoundingClientRect(),svgX=(event.clientX-rect.left)*cfg.W/rect.width;
+  const svg=$('monthlyChart'),cfg=svg._hover,tip=$('monthlyTooltip'),svgX=svgPointerX(event,svg);
   const i=Math.max(0,Math.min(11,Math.floor((svgX-cfg.p.l)/cfg.bw))),r=cfg.series[i],cx=cfg.p.l+i*cfg.bw+cfg.bw/2;
   $('monthlyHover').innerHTML=`<rect class="hover-band" x="${cfg.p.l+i*cfg.bw}" y="${cfg.p.t}" width="${cfg.bw}" height="${cfg.H-cfg.p.t-cfg.p.b}" rx="4"/><line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/>`;
   tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Total geral</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira dentro do total</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Realizado sem carteira</span><b>${money(Math.max(0,r.realizado-r.carteira))}</b></div>`;
   tooltipPosition(event,svg,tip,$('monthlyShell'));
 }
 function dailyHover(event){
-  const svg=$('dailyChart'),cfg=svg._hover,tip=$('dailyTooltip'),rect=svg.getBoundingClientRect(),svgX=(event.clientX-rect.left)*cfg.W/rect.width;
+  const svg=$('dailyChart'),cfg=svg._hover,tip=$('dailyTooltip'),svgX=svgPointerX(event,svg);
   const i=Math.max(0,Math.min(cfg.series.length-1,Math.round((svgX-cfg.p.l)*(cfg.series.length-1)/(cfg.W-cfg.p.l-cfg.p.r)))),r=cfg.series[i],cx=cfg.x(i),yr=cfg.y(r.realizado),yw=cfg.y(r.carteira);
   $('dailyHover').innerHTML=`<line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/><circle class="hover-point" cx="${cx}" cy="${yr}" r="5" fill="var(--blue)"/><circle class="hover-point" cx="${cx}" cy="${yw}" r="5" fill="var(--amber)"/>`;
   tip.innerHTML=`<strong>${r.data.slice(8,10)}/${r.data.slice(5,7)}/${r.data.slice(0,4)}</strong><div class="tip-row"><span>Total geral acumulado</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira acumulada</span><b>${money(r.carteira)}</b></div><div class="tip-row"><span>Sem carteira</span><b>${money(Math.max(0,r.realizado-r.carteira))}</b></div>`;
@@ -239,8 +244,13 @@ function selectPeriod(){
   period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
 }
 function filterRepresentative(repId){
+  if($('repSelect').value===String(repId)){$('repSelect').value='';$('repSearch').value='';render();return}
   const rep=repChoices.find(x=>String(x.repId)===String(repId));
   if(rep){$('repSelect').value=String(rep.repId);$('repSearch').value=`${rep.representante} · ${rep.repId}`;render()}
+}
+function filterContract(contract){
+  $('contractSelect').value=$('contractSelect').value===contract?'':contract;
+  render();
 }
 function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('commercial-theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Claro':'🌙 Escuro'}
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
