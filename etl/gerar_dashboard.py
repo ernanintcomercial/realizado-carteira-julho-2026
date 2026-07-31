@@ -118,6 +118,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pd010", type=Path, required=True)
     parser.add_argument("--pd019", type=Path, required=True)
     parser.add_argument("--index", type=Path, required=True)
+    parser.add_argument(
+        "--history",
+        type=Path,
+        help="JSON congelado dos meses encerrados, gerado pelo mesmo ETL.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--holidays", type=Path)
     parser.add_argument("--as-of", help="Data de execução YYYY-MM-DD.")
@@ -131,7 +136,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    for source in (args.pd010, args.pd019, args.index):
+    sources = [args.pd010, args.pd019, args.index]
+    if args.history:
+        sources.append(args.history)
+    for source in sources:
         if not source.is_file() or source.stat().st_size == 0:
             raise SystemExit(f"ERRO: fonte ausente ou vazia: {source}")
 
@@ -159,13 +167,44 @@ def main() -> None:
     pd10["Data"] = pd.to_datetime(pd10[date_col], errors="coerce").dt.normalize()
     source_year = pd10[pd10["Data"].dt.year == year].copy()
     source_months = sorted(int(x) for x in source_year["Data"].dt.month.dropna().unique())
+    history_payload: dict[str, object] = {}
+    history_months: list[int] = []
+    history_records: list[dict[str, object]] = []
+    if args.history:
+        history_payload = json.loads(args.history.read_text(encoding="utf-8"))
+        if int(history_payload.get("ano", 0)) != year:
+            raise SystemExit(
+                f"ERRO: base histórica pertence ao ano {history_payload.get('ano')}, "
+                f"mas o corte pertence a {year}."
+            )
+        for month in range(1, current_month):
+            period_id = f"M{month:02}"
+            period = next(
+                (item for item in history_payload.get("periodos", []) if item["id"] == period_id),
+                None,
+            )
+            if not period:
+                continue
+            history_months.append(month)
+            for record in period["registros"]:
+                history_records.append({"Mes": month, **record})
+
     required_months = list(range(1, current_month + 1))
-    missing_months = [month for month in required_months if month not in source_months]
+    coverage_months = sorted(set(source_months) | set(history_months))
+    missing_months = [month for month in required_months if month not in coverage_months]
     if missing_months and not args.allow_monthly:
         raise SystemExit(
-            "BLOQUEADO: PD010 não é anual ou está incompleto. "
-            f"Meses encontrados={source_months}; obrigatórios={required_months}."
+            "BLOQUEADO: histórico + PD010 mensal estão incompletos. "
+            f"Meses cobertos={coverage_months}; obrigatórios={required_months}."
         )
+
+    if args.history:
+        source_year = source_year[source_year["Data"].dt.month == current_month].copy()
+        if current_month not in source_months:
+            raise SystemExit(
+                f"BLOQUEADO: PD010 mensal não contém o mês do corte ({current_month}). "
+                f"Meses encontrados={source_months}."
+            )
 
     pd10 = source_year[
         (source_year["Data"] <= cutoff)
@@ -254,12 +293,37 @@ def main() -> None:
     meta_long["Meta"] = pd.to_numeric(meta_long["Meta"], errors="coerce").fillna(0)
 
     keys = ["Mes", "Regiao", "RepId", "Contrato"]
-    actual = (
+    actual_current = (
         pd10[pd10["Contrato"].isin(CONTRACT_ORDER)]
         .groupby(keys, dropna=False)
         .agg(Realizado=("ROBValor", "sum"), Carteira=("CarteiraValor", "sum"))
         .reset_index()
     )
+    history_names: dict[int, str] = {}
+    if history_records:
+        history_actual = pd.DataFrame([
+            {
+                "Mes": int(record["Mes"]),
+                "Regiao": record["regiao"],
+                "RepId": int(record["repId"]),
+                "Contrato": record["contrato"],
+                "Realizado": float(record.get("realizado", 0)),
+                "Carteira": float(record.get("carteira", 0)),
+            }
+            for record in history_records
+            if record["contrato"] in CONTRACT_ORDER
+        ])
+        history_names = {
+            int(record["repId"]): str(record["representante"])
+            for record in history_records
+        }
+        actual = pd.concat([history_actual, actual_current], ignore_index=True)
+        actual = (
+            actual.groupby(keys, dropna=False)[["Realizado", "Carteira"]]
+            .sum().reset_index()
+        )
+    else:
+        actual = actual_current
     meta = (
         meta_long[meta_long["Contrato"].isin(CONTRACT_ORDER)]
         .groupby(keys, dropna=False)["Meta"]
@@ -272,9 +336,12 @@ def main() -> None:
     model["RepNome"] = model["RepId"].map(
         lambda value: index_names.get(
             int(value),
-            pd10.loc[pd10["RepId"] == value, "RepNome"].iloc[0]
-            if (pd10["RepId"] == value).any()
-            else str(int(value)),
+            history_names.get(
+                int(value),
+                pd10.loc[pd10["RepId"] == value, "RepNome"].iloc[0]
+                if (pd10["RepId"] == value).any()
+                else str(int(value)),
+            ),
         )
     )
 
@@ -395,12 +462,15 @@ def main() -> None:
         for row in daily_detail.itertuples()
     ]
 
-    total_general = money(pd10["ROBValor"].sum())
-    total_wallet = money(pd10["CarteiraValor"].sum())
+    history_quality = history_payload.get("qualidade", {}) if history_payload else {}
+    history_total = float(history_quality.get("totalGeral", 0))
+    history_wallet = float(history_quality.get("carteira", 0))
+    total_general = money(history_total + pd10["ROBValor"].sum())
+    total_wallet = money(history_wallet + pd10["CarteiraValor"].sum())
     model_total = money(model["Realizado"].sum())
     model_wallet = money(model["Carteira"].sum())
     checks = {
-        "pd010Anual": not missing_months,
+        "coberturaCompleta": not missing_months,
         "totalGeralConciliado": abs(total_general - model_total) < 0.02,
         "carteiraConciliada": abs(total_wallet - model_wallet) < 0.02,
         "carteiraDentroTotal": total_wallet <= total_general + 0.01,
@@ -410,17 +480,24 @@ def main() -> None:
     if failed_checks:
         raise SystemExit(f"ERRO: validações falharam: {failed_checks}")
 
-    status_totals = (
+    current_status_totals = (
         pd10.assign(Status=pd10[status_col].map(norm))
         .groupby("Status")["ROBValor"]
         .sum()
         .round(2)
         .to_dict()
     )
+    status_totals = {
+        str(key): float(value)
+        for key, value in history_quality.get("totaisPorSituacao", {}).items()
+    }
+    for key, value in current_status_totals.items():
+        status_totals[key] = status_totals.get(key, 0) + float(value)
+    source_rep_ids = {int(value) for value in pd10["RepId"].dropna().unique()}
+    source_rep_ids.update(int(value) for value in history_quality.get("representantesForaINDEX", []))
     outside_index = sorted(
-        int(value)
-        for value in pd10["RepId"].dropna().unique()
-        if int(value) != 0 and int(value) not in index_region
+        value for value in source_rep_ids
+        if value != 0 and value not in index_region
     )
     payload = {
         "titulo": "Painel Comercial Integrado",
@@ -447,8 +524,11 @@ def main() -> None:
         "carteiraDiariaRegistros": daily_records,
         "qualidade": {
             "checks": checks,
-            "mesesPD010": source_months,
+            "mesesPD010": coverage_months,
+            "mesesHistorico": history_months,
+            "mesesFonteMensal": source_months,
             "linhasPD010": int(len(pd10)),
+            "linhasHistoricoOrigem": int(history_quality.get("linhasPD010", 0)),
             "linhasPD019": int(len(pd19)),
             "totalGeral": total_general,
             "carteira": total_wallet,
@@ -459,7 +539,8 @@ def main() -> None:
             "representantesForaINDEX": outside_index,
         },
         "fontes": [
-            "ETLdados/WWWPD010.xlsx — total geral e carteira",
+            "dados-historicos.json — meses encerrados",
+            "ETLdados/WWWPD010.xlsx — mês atual, total geral e carteira",
             "ETLdados/WWWPD019.xlsx — metas comerciais",
             "ETLdados/INDEX.xlsx — regiões e representantes",
         ],
