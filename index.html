@@ -66,7 +66,7 @@
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
       <article class="card kpi focus"><label>Meta até o corte</label><strong id="kCutMeta">—</strong><small id="kCutMetaNote">referência operacional diária</small></article>
       <article class="card kpi"><label>Total geral</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
-      <article class="card kpi"><label>Carteira em aberto</label><strong class="amber" id="kWalletTotal">—</strong><small id="kWalletNote"></small><div class="kpi-sub" id="kWalletPeriod"><span>No período selecionado</span><b id="kWallet">—</b></div></article>
+      <article class="card kpi"><label>Carteira em aberto</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small><div class="kpi-sub"><span>Carteira total</span><b id="kWalletTotal">—</b></div></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
     <section class="card pace" aria-label="Régua de progresso do período">
@@ -152,10 +152,10 @@ function searchRepresentative(){
 function render(){
   rows=filteredRows();const meta=sum(rows,'meta'),cutMeta=metaUntilCutoff(),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta),cutPct=percent(real,cutMeta);
   const totalPeriod=data.periodos.find(x=>x.id==='YTD')||data.periodos[0],totalWallet=sum((totalPeriod?.registros||[]).filter(matchesFilters),'carteira');
-  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWalletTotal').textContent=money(totalWallet);$('kWallet').textContent=money(wallet);$('kWalletPeriod').style.display=period.id==='YTD'?'none':'flex';
+  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kWallet').textContent=money(wallet);$('kWalletTotal').textContent=money(totalWallet);
   $('kCutMeta').textContent=money(cutMeta);$('kCutPct').textContent=cutMeta?cutPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';$('kFullPct').textContent=meta?pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';
   $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
-  $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent='total em casa · posição '+data.cortes.carteira;
+  $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent=period.label+' · posição '+data.cortes.carteira;
   const scale=Math.max(meta,real,cutMeta,1),realWidth=Math.min(100,100*real/scale),walletStart=Math.min(realWidth,100*Math.max(0,real-wallet)/scale),walletWidth=Math.max(0,realWidth-walletStart),cutPosition=Math.min(100,100*cutMeta/scale);
   $('paceReal').style.width=realWidth+'%';$('paceWallet').style.left=walletStart+'%';$('paceWallet').style.width=walletWidth+'%';$('paceCut').style.left=`calc(${cutPosition}% - 1px)`;
   const operationalGap=cutMeta-real;
