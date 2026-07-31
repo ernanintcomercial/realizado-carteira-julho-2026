@@ -90,7 +90,7 @@
   <section class="view" id="performance">
     <div class="grid split">
       <article class="card panel"><div class="panel-head"><h2>Ranking de representantes</h2><span class="muted">clique no representante para filtrar ou remover o filtro</span></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Região</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Ating.</th></tr></thead><tbody id="rankingRows"></tbody></table></div></article>
-      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2><span class="muted">clique no contrato para filtrar ou remover o filtro</span></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Desempenho por contrato</h2><span class="muted">clique no contrato para filtrar ou remover o filtro · faturamento temporário do anexo</span></div><div class="table-wrap"><table><thead><tr><th>Contrato</th><th>Meta</th><th>Total geral</th><th>% Atingimento</th><th>Meta</th><th>Faturamento</th><th>% Atingimento</th></tr></thead><tbody id="contractRows"></tbody></table></div></article>
     </div>
   </section>
 
@@ -108,6 +108,8 @@ const $=id=>document.getElementById(id), money=v=>(v||0).toLocaleString('pt-BR',
 const compact=v=>{const a=Math.abs(v||0);return a>=1e6?'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e3?'R$ '+(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil':money(v)};
 const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]||0),0);
 let data,period,rows=[],repChoices=[];
+// Apoio visual temporário: agregado da última coluna "Faturado" do anexo recebido.
+const FATURAMENTO_CONTRATO_TEMP={'ALUMÍNIO':52581009.62,'PLÁSTICO':17215219.55,'LED':2680755.16,'EX':1237981.00};
 const aggregate=(items,keys)=>{const map=new Map();items.forEach(r=>{const id=keys.map(k=>r[k]).join('|');if(!map.has(id))map.set(id,Object.fromEntries(keys.map(k=>[k,r[k]])));const x=map.get(id);['meta','realizado','carteira'].forEach(k=>x[k]=(x[k]||0)+(r[k]||0))});return [...map.values()]};
 const pill=p=>`<span class="pill ${p>=100?'good':p>=80?'warn':'bad'}">${p.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`;
 
@@ -183,7 +185,7 @@ function renderRanking(){
 }
 function renderContracts(){
   const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
-  $('contractRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterContract('${r.contrato}')">${r.contrato}</button></td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+  $('contractRows').innerHTML=agg.map(r=>{const faturamento=FATURAMENTO_CONTRATO_TEMP[r.contrato]||0;return `<tr><td><button class="filter-link" onclick="filterContract('${r.contrato}')">${r.contrato}</button></td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${pill(percent(r.realizado,r.meta))}</td><td>${money(r.meta)}</td><td>${money(faturamento)}</td><td>${pill(percent(faturamento,r.meta))}</td></tr>`}).join('');
 }
 function renderDetails(){
   const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
