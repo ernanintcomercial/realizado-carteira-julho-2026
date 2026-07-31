@@ -109,7 +109,11 @@ const compact=v=>{const a=Math.abs(v||0);return a>=1e6?'R$ '+(v/1e6).toLocaleStr
 const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]||0),0);
 let data,period,rows=[],repChoices=[];
 // Apoio visual temporário: agregado da última coluna "Faturado" do anexo recebido.
-const FATURAMENTO_CONTRATO_TEMP={'ALUMÍNIO':52581009.62,'PLÁSTICO':17215219.55,'LED':2680755.16,'EX':1237981.00};
+function filteredFaturamento(){
+  const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
+  return (data.faturamentoRegistros||[]).filter(r=>(!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!rep||String(r.repId)===rep));
+}
+function sumFat(rows,contrato){return rows.filter(r=>r.contrato===contrato).reduce((s,r)=>s+(r.faturado||0),0);}
 const aggregate=(items,keys)=>{const map=new Map();items.forEach(r=>{const id=keys.map(k=>r[k]).join('|');if(!map.has(id))map.set(id,Object.fromEntries(keys.map(k=>[k,r[k]])));const x=map.get(id);['meta','realizado','carteira'].forEach(k=>x[k]=(x[k]||0)+(r[k]||0))});return [...map.values()]};
 const pill=p=>`<span class="pill ${p>=100?'good':p>=80?'warn':'bad'}">${p.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`;
 
@@ -184,8 +188,13 @@ function renderRanking(){
   $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderContracts(){
+  const fatRows=filteredFaturamento();
   const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
-  $('contractRows').innerHTML=agg.map(r=>{const faturamento=FATURAMENTO_CONTRATO_TEMP[r.contrato]||0;return `<tr><td><button class="filter-link" onclick="filterContract('${r.contrato}')">${r.contrato}</button></td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${pill(percent(r.realizado,r.meta))}</td><td>${money(r.meta)}</td><td>${money(faturamento)}</td><td>${pill(percent(faturamento,r.meta))}</td></tr>`}).join('');
+  $('contractRows').innerHTML=agg.map(r=>{
+    const faturamento=sumFat(fatRows,r.contrato);
+    const fatMeta=fatRows.filter(x=>x.contrato===r.contrato).reduce((s,x)=>s+(x.meta||0),0)||r.meta;
+    return `<tr><td><button class="filter-link" onclick="filterContract('${r.contrato}')">${r.contrato}</button></td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${pill(percent(r.realizado,r.meta))}</td><td>${money(fatMeta)}</td><td>${money(faturamento)}</td><td>${pill(percent(faturamento,fatMeta))}</td></tr>`;
+  }).join('');
 }
 function renderDetails(){
   const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
