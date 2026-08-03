@@ -262,8 +262,16 @@ function renderRanking(){
   $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderContracts(){
-  const fatRows=filteredFaturamento();
-  const aggBase=aggregate(rows,['contrato']);
+  const normalizarContratoVisual=valor=>{
+    const texto=String(valor||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+    if(texto.includes('ALUM')) return 'ALUMÍNIO';
+    if(texto.includes('PLAST')) return 'PLÁSTICO';
+    if(texto==='LED') return 'LED';
+    if(texto==='EX') return 'EX';
+    return 'OUTROS';
+  };
+  const fatRows=filteredFaturamento().map(r=>({...r,contrato:normalizarContratoVisual(r.contrato)}));
+  const aggBase=aggregate(rows.map(r=>({...r,contrato:normalizarContratoVisual(r.contrato)})),['contrato']);
   const contratos=[...new Set([...aggBase.map(r=>r.contrato),...fatRows.map(r=>r.contrato)])];
   const agg=contratos.map(contrato=>aggBase.find(r=>r.contrato===contrato)||({contrato,meta:0,realizado:0,carteira:0})).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('contractRows').innerHTML=agg.map(r=>{
