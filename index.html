@@ -263,7 +263,9 @@ function renderRanking(){
 }
 function renderContracts(){
   const fatRows=filteredFaturamento();
-  const agg=aggregate(rows,['contrato']).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
+  const aggBase=aggregate(rows,['contrato']);
+  const contratos=[...new Set([...aggBase.map(r=>r.contrato),...fatRows.map(r=>r.contrato)])];
+  const agg=contratos.map(contrato=>aggBase.find(r=>r.contrato===contrato)||({contrato,meta:0,realizado:0,carteira:0})).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('contractRows').innerHTML=agg.map(r=>{
     const faturamento=sumFat(fatRows,r.contrato);
     const fatMeta=fatRows.filter(x=>x.contrato===r.contrato).reduce((s,x)=>s+(x.meta||0),0)||r.meta;
