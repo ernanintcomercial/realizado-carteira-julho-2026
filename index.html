@@ -309,7 +309,7 @@ function drawDaily(){
   const svg=$('dailyChart'),W=1000,H=350,p={l:70,r:18,t:18,b:40};if(!series.length){svg.innerHTML='';return}
   const max=Math.max(1,...series.flatMap(x=>[x.realizado,x.carteira]))*1.08,x=i=>p.l+i*(W-p.l-p.r)/(series.length-1),y=v=>H-p.b-v*(H-p.t-p.b)/max,path=k=>series.map((r,i)=>(i?'L':'M')+x(i)+','+y(r[k])).join(' ');
   let h='';for(let i=0;i<=4;i++){const v=max*i/4,yy=y(v);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${compact(v).replace('R$ ','')}</text>`}
-  [0,Math.floor((series.length-1)/2),series.length-1].forEach(i=>h+=`<text class="axis" x="${x(i)}" y="${H-14}" text-anchor="middle">${series[i].data.slice(8,10)}/07</text>`);
+  [0,Math.floor((series.length-1)/2),series.length-1].forEach(i=>{const date=String(series[i].data||''),label=date.length>=10?`${date.slice(8,10)}/${date.slice(5,7)}`:date;h+=`<text class="axis" x="${x(i)}" y="${H-14}" text-anchor="middle">${label}</text>`});
   svg.innerHTML=h+`<path class="salesline" d="${path('realizado')}"/><path class="walletline" d="${path('carteira')}"/><g id="dailyHover"></g>`;
   svg._hover={series,W,H,p,x,y};svg.onmousemove=dailyHover;svg.onmouseleave=()=>hideHover('dailyTooltip','dailyHover');
 }
@@ -360,7 +360,7 @@ $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRe
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';$('repSearch').value='';render()};
 
-fetch('dados-gerenciais.json?v=23').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=24').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
