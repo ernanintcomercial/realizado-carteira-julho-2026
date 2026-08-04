@@ -254,10 +254,10 @@ function renderRegions(){
 function renderInsights(meta,real,wallet){
   const repAgg=aggregate(rows,['repId','representante','regiao']),best=repAgg.filter(x=>x.meta>0).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta))[0];
   const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>percent(a.realizado,a.meta)-percent(b.realizado,b.meta)),weak=regionAgg[0];
-  const gap=meta-real,items=[
+  const gap=meta-real,regionalRestrita=Array.isArray(data.ordemRegioes)&&data.ordemRegioes.length===1,items=[
     {c:gap<=0?'':'bad',t:gap<=0?`Total geral supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} para atingir a meta.`},
     {c:'',t:best?`${best.representante} lidera atingimento: ${percent(best.realizado,best.meta).toFixed(0)}%.`:'Sem meta para ranking.'},
-    {c:'warn',t:weak?`${weak.regiao} possui menor atingimento: ${percent(weak.realizado,weak.meta).toFixed(0)}%.`:'Sem região selecionada.'},
+    {c:'warn',t:weak?(regionalRestrita?`Sua região supervisionada está em ${percent(weak.realizado,weak.meta).toFixed(0)}% de atingimento.`:`${weak.regiao} possui menor atingimento: ${percent(weak.realizado,weak.meta).toFixed(0)}%.`):'Sem região selecionada.'},
     {c:'',t:`Carteira representa ${percent(wallet,real).toFixed(1)}% do total geral.`}
   ];$('insights').innerHTML=items.map(x=>`<div class="insight ${x.c}">${x.t}</div>`).join('');
 }
@@ -360,7 +360,7 @@ $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRe
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';$('repSearch').value='';render()};
 
-fetch('dados-gerenciais.json?v=21').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=22').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
