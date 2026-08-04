@@ -360,7 +360,7 @@ $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRe
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
 $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];updateRepOptions();$('repSelect').value='';$('repSearch').value='';render()};
 
-fetch('dados-gerenciais.json?v=18').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=19').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
