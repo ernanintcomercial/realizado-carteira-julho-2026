@@ -104,7 +104,7 @@
     <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
   </section>
   <section class="view" id="abc">
-    <article class="card panel"><div class="panel-head"><div><h2>Clientes por classe ABC</h2><div class="muted" id="abcNote">A até 80% · B até 95% · C restante · base do período selecionado</div></div><span class="muted" id="abcSummary"></span></div><div class="abc-blocks" id="abcBlocks"></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total geral</th><th>Carteira</th><th>Acumulado</th><th>Classe</th></tr></thead><tbody id="abcRows"></tbody></table></div></article>
+    <article class="card panel"><div class="panel-head"><div><h2>Clientes por classe ABC</h2><div class="muted" id="abcNote">A até 80% · B até 95% · C restante · dados de agosto</div></div><span class="muted" id="abcSummary"></span></div><div class="abc-blocks" id="abcBlocks"></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total geral</th><th>Carteira</th><th>Acumulado</th><th>Classe</th></tr></thead><tbody id="abcRows"></tbody></table></div></article>
   </section>
   <footer id="footer"></footer>
 </main>
@@ -298,7 +298,7 @@ function renderABC(){
   const rows=[...principais,...demaisRow];
   const classes=['A','B','C'].map(classe=>{const list=classificados.filter(r=>r.classe===classe);return {classe,list,total:sum(list,'realizado'),carteira:sum(list,'carteira')}});
   $('abcSummary').textContent=`${selected.length} clientes · Total Geral ${money(total)}`;$('abcBlocks').innerHTML=classes.map(x=>`<button class="abc-block abc-${x.classe.toLowerCase()}" onclick="setABCClass('${x.classe}')"><h3>Classe ${x.classe}</h3><strong>${money(x.total)}</strong><small>${x.list.length} clientes · ${total?percent(x.total,total).toFixed(1):'0,0'}% do total · Carteira ${money(x.carteira)}</small></button>`).join('');const visible=abcClassFilter?classificados.filter(r=>r.classe===abcClassFilter):rows;$('abcRows').innerHTML=visible.map(r=>`<tr><td>${r.cliente}<div class="muted">${r.regiao}</div></td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${(r.cum*100).toFixed(1)}%</td><td>${r.classe}</td></tr>`).join('');return;
-  $('abcSummary').textContent=`${rows.length} clientes · Total Geral ${money(total)}`;$('abcNote').textContent=`Classe A até 80% · B até 95% · base do período selecionado`;
+  $('abcSummary').textContent=`${rows.length} clientes · Total Geral ${money(total)}`;$('abcNote').textContent=`Classe A até 80% · B até 95% · dados de agosto`;
   const svg=$('abcChart'),W=1000,H=380,p={l:65,r:30,t:20,b:52},shown=rows.slice(0,30),max=Math.max(1,...shown.map(x=>x.realizado))*1.1,cw=(W-p.l-p.r)/Math.max(1,shown.length),y=v=>H-p.b-v/max*(H-p.t-p.b);$('abcLegend').innerHTML=shown.map((r,i)=>`<span><b>${i+1}.</b>${r.cliente}</span>`).join('');let h='';[0,.25,.5,.75,1].forEach(v=>{const yy=H-p.b-v*(H-p.t-p.b);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${Math.round(v*100)}%</text>`});
   shown.forEach((r,i)=>{const x=p.l+i*cw+cw*.12,w=cw*.76;h+=`<rect x="${x}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" fill="${r.classe==='A'?'var(--blue)':r.classe==='B'?'var(--amber)':'var(--muted)'}" opacity=".82"><title>${r.cliente}: ${money(r.realizado)}</title></rect><text class="axis" x="${x+w/2}" y="${H-p.b+14}" text-anchor="end" transform="rotate(-48 ${x+w/2} ${H-p.b+14})">${r.cliente}</text>`});
   const path=shown.map((r,i)=>`${i?'L':'M'}${p.l+i*cw+cw/2},${H-p.b-r.cum*(H-p.t-p.b)}`).join(' ');h+=`<path class="salesline" d="${path}"/><line class="hover-guide" x1="${p.l}" y1="${H-p.b-(H-p.t-p.b)*.8}" x2="${W-p.r}" y2="${H-p.b-(H-p.t-p.b)*.8}"/><line class="hover-guide" x1="${p.l}" y1="${H-p.b-(H-p.t-p.b)*.95}" x2="${W-p.r}" y2="${H-p.b-(H-p.t-p.b)*.95}"/>`;svg.innerHTML=h;
@@ -374,7 +374,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=42').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=43').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
