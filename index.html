@@ -128,6 +128,8 @@ const FATURAMENTO_ANEXO=[
 
 function adjustedPeriodRows(periodo){
   const base=(periodo?.registros||[]).map(r=>({...r}));
+  // O ETL atual já entrega a Keyla alocada por UF/região; não reaplicar o ajuste legado.
+  return base;
   const meses=new Set((periodo?.meses||[]).map(Number));
   const keylaFat=KEYLA_FATURAMENTO_BRUTO
     .filter(([mes])=>meses.has(Number(mes)))
@@ -350,7 +352,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=29').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=30').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
