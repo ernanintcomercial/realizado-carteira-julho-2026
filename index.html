@@ -108,6 +108,7 @@
 const $=id=>document.getElementById(id), money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const compact=v=>{const a=Math.abs(v||0);return a>=1e6?'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi':a>=1e3?'R$ '+(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil':money(v)};
 const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]||0),0);
+const contractKey=value=>{const t=String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();if(t.startsWith('ALUM'))return 'ALUMINIO';if(t.startsWith('PL'))return 'PLASTICO';if(t==='LED')return 'LED';if(t==='EX')return 'EX';return 'OUTROS'};
 let data,period,rows=[],repChoices=[];
 const selectedRepIds=()=>($('repSelect').value||'').split(',').map(x=>x.trim()).filter(Boolean);
 // Dados do anexo TABELA_FINAL.xlsx (Mes + Regiao + ID Representante + Contrato), ja agregados
@@ -187,7 +188,7 @@ function filteredFaturamento(){
   const region=$('regionSelect').value,contract=$('contractSelect').value,rep=$('repSelect').value;
   const meses=(period&&period.meses)||[];
   const base=(data&&data.faturamentoRegistros&&data.faturamentoRegistros.length)?data.faturamentoRegistros:FATURAMENTO_ANEXO;
-  const reps=selectedRepIds();return base.filter(r=>(!meses.length||meses.includes(+r.mes))&&(!region||r.regiao===region)&&(!contract||r.contrato===contract)&&(!reps.length||reps.includes(String(r.repId))));
+  const reps=selectedRepIds();return base.filter(r=>(!meses.length||meses.includes(+r.mes))&&(!region||r.regiao===region)&&(!contract||contractKey(r.contrato)===contractKey(contract))&&(!reps.length||reps.includes(String(r.repId))));
 }
 function sumFat(rows,contrato){return rows.filter(r=>r.contrato===contrato).reduce((s,r)=>s+(r.faturado||0),0);}
 const aggregate=(items,keys)=>{const map=new Map();items.forEach(r=>{const id=keys.map(k=>r[k]).join('|');if(!map.has(id))map.set(id,Object.fromEntries(keys.map(k=>[k,r[k]])));const x=map.get(id);['meta','realizado','carteira'].forEach(k=>x[k]=(x[k]||0)+(r[k]||0))});return [...map.values()]};
@@ -352,7 +353,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=31').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=32').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
