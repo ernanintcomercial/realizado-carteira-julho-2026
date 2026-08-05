@@ -58,6 +58,7 @@
     <button class="tab" data-view="performance">Desempenho</button>
     <button class="tab" data-view="wallet">Carteira diária</button>
     <button class="tab" data-view="details">Detalhamento</button>
+    <button class="tab" data-view="abc">Curva ABC</button>
   </nav>
 
   <div id="loading" class="card loading">Preparando painel gerencial…</div>
@@ -101,6 +102,9 @@
 
   <section class="view" id="details">
     <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Sem carteira</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
+  </section>
+  <section class="view" id="abc">
+    <article class="card panel"><div class="panel-head"><div><h2>Curva ABC de clientes</h2><div class="muted" id="abcNote">Classe A até 80% · B até 95% · base do mês atual</div></div><span class="muted" id="abcSummary"></span></div><div class="chart-shell"><svg id="abcChart" viewBox="0 0 1000 380" role="img" aria-label="Curva ABC de clientes"></svg></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total geral</th><th>Carteira</th><th>Acumulado</th><th>Classe</th></tr></thead><tbody id="abcRows"></tbody></table></div></article>
   </section>
   <footer id="footer"></footer>
 </main>
@@ -240,7 +244,7 @@ function render(){
   const operationalGap=cutMeta-real;
   $('paceReading').innerHTML=cutMeta?(operationalGap<=0?`<b>Ritmo acima do esperado:</b> o Total Geral supera a meta até o corte em ${money(-operationalGap)}.`:`<b>Ritmo abaixo do esperado:</b> faltam ${money(operationalGap)} para alcançar a meta até o corte.`):'<b>Sem meta operacional neste período.</b>';
   $('paceRail').setAttribute('aria-label',`Total Geral ${money(real)}; carteira incluída ${money(wallet)}; meta até o corte ${money(cutMeta)}; meta completa ${money(meta)}.`);
-  renderRegions();renderInsights(meta,real,wallet);renderRanking();renderContracts();renderDetails();drawMonthly();drawDaily();
+  renderRegions();renderInsights(meta,real,wallet);renderRanking();renderContracts();renderDetails();renderABC();drawMonthly();drawDaily();
 }
 function renderRegions(){
   const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>data.ordemRegioes.indexOf(a.regiao)-data.ordemRegioes.indexOf(b.regiao));
@@ -284,6 +288,17 @@ function renderDetails(){
   const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('detailCount').textContent=sorted.length+' combinações';
   $('detailRows').innerHTML=sorted.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${money(Math.max(0,r.realizado-r.carteira))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
+}
+function renderABC(){
+  const periodData=(data.periodos.find(x=>x.id===$('periodSelect').value)||period||{}),region=$('regionSelect').value,contract=$('contractSelect').value,reps=selectedRepIds();
+  const base=(periodData.clientes||[]).filter(r=>!region||r.regiao===region);
+  const selected=base.sort((a,b)=>b.realizado-a.realizado);let total=sum(selected,'realizado'),acc=0;
+  const rows=selected.map(r=>{acc+=r.realizado;const cum=total?acc/total:0;return {...r,cum,classe:cum<=.8?'A':cum<=.95?'B':'C'}});
+  $('abcSummary').textContent=`${rows.length} clientes · Total Geral ${money(total)}`;$('abcNote').textContent=`Classe A até 80% · B até 95% · base do período selecionado`;
+  const svg=$('abcChart'),W=1000,H=380,p={l:65,r:30,t:20,b:52},shown=rows.slice(0,30),max=Math.max(1,...shown.map(x=>x.realizado))*1.1,cw=(W-p.l-p.r)/Math.max(1,shown.length),y=v=>H-p.b-v/max*(H-p.t-p.b);let h='';[0,.25,.5,.75,1].forEach(v=>{const yy=H-p.b-v*(H-p.t-p.b);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${Math.round(v*100)}%</text>`});
+  shown.forEach((r,i)=>{const x=p.l+i*cw+cw*.12,w=cw*.76;h+=`<rect x="${x}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" fill="${r.classe==='A'?'var(--blue)':r.classe==='B'?'var(--amber)':'var(--muted)'}" opacity=".82"><title>${r.cliente}: ${money(r.realizado)}</title></rect><text class="axis" x="${x+w/2}" y="${H-p.b+14}" text-anchor="end" transform="rotate(-48 ${x+w/2} ${H-p.b+14})">${r.cliente}</text>`});
+  const path=shown.map((r,i)=>`${i?'L':'M'}${p.l+i*cw+cw/2},${H-p.b-r.cum*(H-p.t-p.b)}`).join(' ');h+=`<path class="salesline" d="${path}"/><line class="hover-guide" x1="${p.l}" y1="${H-p.b-(H-p.t-p.b)*.8}" x2="${W-p.r}" y2="${H-p.b-(H-p.t-p.b)*.8}"/><line class="hover-guide" x1="${p.l}" y1="${H-p.b-(H-p.t-p.b)*.95}" x2="${W-p.r}" y2="${H-p.b-(H-p.t-p.b)*.95}"/>`;svg.innerHTML=h;
+  $('abcRows').innerHTML=rows.map(r=>`<tr><td>${r.cliente}<div class="muted">${r.regiao}</div></td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${(r.cum*100).toFixed(1)}%</td><td>${pill(r.classe==='A'?100:r.classe==='B'?95:80)}</td></tr>`).join('');
 }
 function drawMonthly(){
   const svg=$('monthlyChart'),W=900,H=310,p={l:58,r:15,t:12,b:35};
@@ -354,7 +369,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=33').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=34').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
