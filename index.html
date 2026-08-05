@@ -268,7 +268,7 @@ function renderContracts(){
   };
   const fatRows=filteredFaturamento().map(r=>({...r,contrato:normalizarContratoVisual(r.contrato)}));
   const aggBase=aggregate(rows.map(r=>({...r,contrato:normalizarContratoVisual(r.contrato)})),['contrato']);
-  const contratos=[...new Set([...aggBase.map(r=>r.contrato),...fatRows.map(r=>r.contrato)])];
+  const contratos=[...new Set([...aggBase.map(r=>r.contrato),...fatRows.map(r=>r.contrato)])].filter(contrato=>contrato!=='OUTROS');
   const agg=contratos.map(contrato=>aggBase.find(r=>r.contrato===contrato)||({contrato,meta:0,realizado:0,carteira:0})).sort((a,b)=>data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('contractRows').innerHTML=agg.map(r=>{
     const faturamento=sumFat(fatRows,r.contrato);
@@ -350,7 +350,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=28').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=29').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
