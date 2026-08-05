@@ -293,7 +293,8 @@ function renderABC(){
   const periodData=(data.periodos.find(x=>x.id===$('periodSelect').value)||period||{}),region=$('regionSelect').value,contract=$('contractSelect').value,reps=selectedRepIds();
   const base=(periodData.clientes||[]).filter(r=>!region||r.regiao===region);
   const selected=base.sort((a,b)=>b.realizado-a.realizado);let total=sum(selected,'realizado'),acc=0;
-  const rows=selected.map(r=>{acc+=r.realizado;const cum=total?acc/total:0;return {...r,cum,classe:cum<=.8?'A':cum<=.95?'B':'C'}});
+  const principais=selected.slice(0,15),demais=selected.slice(15),demaisRow=demais.length?[{cliente:'Demais clientes',regiao:'',realizado:sum(demais,'realizado'),carteira:sum(demais,'carteira')}]:[];
+  const rows=[...principais,...demaisRow].map(r=>{acc+=r.realizado;const cum=total?acc/total:0;return {...r,cum,classe:cum<=.8?'A':cum<=.95?'B':'C'}});
   $('abcSummary').textContent=`${rows.length} clientes · Total Geral ${money(total)}`;$('abcNote').textContent=`Classe A até 80% · B até 95% · base do período selecionado`;
   const svg=$('abcChart'),W=1000,H=380,p={l:65,r:30,t:20,b:52},shown=rows.slice(0,30),max=Math.max(1,...shown.map(x=>x.realizado))*1.1,cw=(W-p.l-p.r)/Math.max(1,shown.length),y=v=>H-p.b-v/max*(H-p.t-p.b);$('abcLegend').innerHTML=shown.map((r,i)=>`<span><b>${i+1}.</b>${r.cliente}</span>`).join('');let h='';[0,.25,.5,.75,1].forEach(v=>{const yy=H-p.b-v*(H-p.t-p.b);h+=`<line class="gridline" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"/><text class="axis" x="${p.l-8}" y="${yy+3}" text-anchor="end">${Math.round(v*100)}%</text>`});
   shown.forEach((r,i)=>{const x=p.l+i*cw+cw*.12,w=cw*.76;h+=`<rect x="${x}" y="${y(r.realizado)}" width="${w}" height="${H-p.b-y(r.realizado)}" fill="${r.classe==='A'?'var(--blue)':r.classe==='B'?'var(--amber)':'var(--muted)'}" opacity=".82"><title>${r.cliente}: ${money(r.realizado)}</title></rect><text class="axis" x="${x+w/2}" y="${H-p.b+14}" text-anchor="end" transform="rotate(-48 ${x+w/2} ${H-p.b+14})">${r.cliente}</text>`});
@@ -369,7 +370,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
-fetch('dados-gerenciais.json?v=37').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=38').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
