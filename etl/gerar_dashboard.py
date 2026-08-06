@@ -163,6 +163,8 @@ def main() -> None:
     rep_col = find_column(pd10, "Repres")
     rep_name_col = find_column(pd10, "Nome Repres")
     uf_col = find_column(pd10, "UF")
+    client_id_col = find_column(pd10, "Cliente")
+    client_name_col = find_column(pd10, "Nome Cliente")
 
     pd10["Data"] = pd.to_datetime(pd10[date_col], errors="coerce").dt.normalize()
     source_year = pd10[pd10["Data"].dt.year == year].copy()
@@ -217,6 +219,8 @@ def main() -> None:
     pd10["Contrato"] = pd10[type_col].map(contract_name)
     pd10["RepId"] = pd.to_numeric(pd10[rep_col], errors="coerce").fillna(0)
     pd10["RepNome"] = pd10[rep_name_col].fillna(pd10[rep_col]).astype(str)
+    pd10["ClienteId"] = pd.to_numeric(pd10[client_id_col], errors="coerce").fillna(0).astype(int)
+    pd10["ClienteNome"] = pd10[client_name_col].fillna(pd10[client_id_col]).astype(str)
     pd10["UFNome"] = pd10[uf_col].map(
         lambda x: UF_CODE_TO_NAME.get(norm(x), norm(x))
     )
@@ -371,6 +375,17 @@ def main() -> None:
             for row in grouped.itertuples()
         ]
 
+    def client_records_for(months: list[int]) -> list[dict[str, object]]:
+        scope = pd10[pd10["Mes"].isin(months) & pd10["Contrato"].isin(CONTRACT_ORDER)]
+        grouped = scope.groupby(["Regiao", "ClienteId", "ClienteNome"], dropna=False).agg(
+            realizado=("ROBValor", "sum"), carteira=("CarteiraValor", "sum"),
+        ).reset_index()
+        return [{
+            "regiao": row.Regiao, "clienteId": int(row.ClienteId),
+            "cliente": row.ClienteNome, "realizado": money(row.realizado),
+            "carteira": money(row.carteira),
+        } for row in grouped.itertuples() if row.ClienteId]
+
     periods: list[dict[str, object]] = []
     period_defs = [
         ("YTD", f"Ano até {MONTH_NAMES[current_month - 1].lower()}", required_months),
@@ -389,6 +404,7 @@ def main() -> None:
             "label": label,
             "meses": months,
             "registros": records_for(scope),
+            "clientes": client_records_for(months),
         })
 
     monthly = []
