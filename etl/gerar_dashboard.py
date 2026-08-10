@@ -251,16 +251,21 @@ def main() -> None:
         .map(lambda uf: UF_REGION.get(uf, "NORTE E NORDESTE"))
         .to_dict()
     )
-    pd10["Regiao"] = pd10.apply(
-        lambda row: index_region.get(
-            int(row["RepId"]),
-            fallback_region.get(
-                row["RepId"],
-                UF_REGION.get(row["UFNome"], "NORTE E NORDESTE"),
-            ),
-        ),
-        axis=1,
-    )
+    def sales_region(row):
+        rep_id = int(row["RepId"])
+        if rep_id in index_region:
+            return index_region[rep_id]
+
+        # Representantes sem cadastro no INDEX podem vender em mais de uma
+        # região. Nesses casos, cada linha deve seguir a UF do cliente.
+        uf_region = UF_REGION.get(row["UFNome"])
+        if uf_region:
+            return uf_region
+
+        # Contingência apenas para linhas cuja UF esteja ausente ou inválida.
+        return fallback_region.get(rep_id, "NORTE E NORDESTE")
+
+    pd10["Regiao"] = pd10.apply(sales_region, axis=1)
 
     meta_rep_col = pd19.columns[1]
     meta_name_col = pd19.columns[2]
