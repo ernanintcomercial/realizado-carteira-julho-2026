@@ -17,6 +17,14 @@ CONTRACTS = {
 }
 CONTRACT_ORDER = ["ALUMÍNIO", "PLÁSTICO", "LED", "EX"]
 REGION_ORDER = ["SUL E CENTRO OESTE", "SUDESTE", "NORTE E NORDESTE"]
+EFT_GROUP_CONTRACT = {
+    1: "ALUMÍNIO", 5: "ALUMÍNIO", 8: "ALUMÍNIO", 74: "ALUMÍNIO",
+    12: "PLÁSTICO", 13: "PLÁSTICO", 16: "PLÁSTICO", 18: "PLÁSTICO",
+    19: "PLÁSTICO", 21: "PLÁSTICO", 23: "PLÁSTICO", 26: "PLÁSTICO",
+    28: "PLÁSTICO", 29: "PLÁSTICO",
+    4: "LED", 6: "LED", 7: "LED", 24: "LED",
+    2: "EX", 3: "EX",
+}
 MONTH_NAMES = [
     "Janeiro",
     "Fevereiro",
@@ -84,7 +92,16 @@ def money(value: object) -> float:
 
 
 def contract_name(value: object) -> str:
-    return CONTRACTS.get(norm(value)[:2], "OUTROS")
+    text = norm(value)
+    if text.startswith("ALUM"):
+        return "ALUMÍNIO"
+    if text.startswith("PLAST"):
+        return "PLÁSTICO"
+    if text.startswith("LED"):
+        return "LED"
+    if text.startswith("EX"):
+        return "EX"
+    return CONTRACTS.get(text[:2], "OUTROS")
 
 
 def region_name(value: object) -> str | None:
@@ -117,6 +134,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Gera os dados do dashboard comercial.")
     parser.add_argument("--pd010", type=Path, required=True)
     parser.add_argument("--pd019", type=Path, required=True)
+    parser.add_argument("--eft018", type=Path, required=True)
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument(
         "--history",
@@ -136,21 +154,29 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    sources = [args.pd010, args.pd019, args.index]
+    sources = [args.pd010, args.pd019, args.eft018, args.index]
     if args.history:
         sources.append(args.history)
     for source in sources:
         if not source.is_file() or source.stat().st_size == 0:
             raise SystemExit(f"ERRO: fonte ausente ou vazia: {source}")
 
-    today = pd.Timestamp(args.as_of).normalize() if args.as_of else pd.Timestamp.now().normalize()
-    cutoff = (today - pd.offsets.BDay(1)).normalize()
-    year = int(cutoff.year)
-    current_month = int(cutoff.month)
-
     holidays: set[str] = set()
     if args.holidays and args.holidays.is_file():
         holidays = set(json.loads(args.holidays.read_text(encoding="utf-8")))
+
+    today = pd.Timestamp(args.as_of).normalize() if args.as_of else pd.Timestamp.now().normalize()
+    cutoff = (today - pd.Timedelta(days=1)).normalize()
+    while cutoff.weekday() >= 5 or cutoff.strftime("%Y-%m-%d") in holidays:
+        cutoff -= pd.Timedelta(days=1)
+    year = int(cutoff.year)
+    current_month = int(cutoff.month)
+
+    previous_payload: dict[str, object] = {}
+    if args.output.is_file() and args.output.stat().st_size:
+        candidate = json.loads(args.output.read_text(encoding="utf-8"))
+        if int(candidate.get("ano", 0)) == year:
+            previous_payload = candidate
 
     pd10 = pd.read_excel(args.pd010, sheet_name=0, header=1)
     pd19 = pd.read_excel(args.pd019, sheet_name=0, header=1)
@@ -267,39 +293,60 @@ def main() -> None:
 
     pd10["Regiao"] = pd10.apply(sales_region, axis=1)
 
-    meta_rep_col = pd19.columns[1]
-    meta_name_col = pd19.columns[2]
-    meta_contract_col = pd19.columns[7]
-    pd19["RepId"] = pd.to_numeric(pd19[meta_rep_col], errors="coerce").fillna(0)
-    pd19["RepNome"] = pd19[meta_name_col].fillna(pd19[meta_rep_col]).astype(str)
-    pd19["Contrato"] = pd19[meta_contract_col].map(contract_name)
-    pd19["Regiao"] = pd19["RepId"].map(
-        lambda value: index_region.get(
-            int(value),
-            fallback_region.get(value, "NORTE E NORDESTE"),
+    # As metas publicadas permanecem congeladas até a gerência validar uma
+    # alteração. O PD019 continua sendo recebido e validado, mas não deve
+    # reescrever retroativamente as metas já aprovadas.
+    previous_meta_rows: list[dict[str, object]] = []
+    for month in range(1, 13):
+        period_id = f"M{month:02}"
+        period = next(
+            (item for item in previous_payload.get("periodos", []) if item["id"] == period_id),
+            None,
         )
-    )
-    month_columns = {norm(column): column for column in pd19.columns}
-    missing_meta_columns = [
-        name for name in MONTH_NAMES if norm(name) not in month_columns
-    ]
-    if missing_meta_columns:
-        raise SystemExit(f"ERRO: meses ausentes no PD019: {missing_meta_columns}")
+        if not period:
+            continue
+        for record in period.get("registros", []):
+            previous_meta_rows.append({
+                "Mes": month,
+                "Regiao": record["regiao"],
+                "RepId": int(record["repId"]),
+                "RepNome": str(record["representante"]),
+                "Contrato": record["contrato"],
+                "Meta": float(record.get("meta", 0)),
+            })
 
-    meta_long = pd19.melt(
-        id_vars=["RepId", "RepNome", "Regiao", "Contrato"],
-        value_vars=[month_columns[norm(name)] for name in MONTH_NAMES],
-        var_name="MesNome",
-        value_name="Meta",
-    )
-    month_number = {
-        norm(month_columns[norm(name)]): index + 1
-        for index, name in enumerate(MONTH_NAMES)
-    }
-    meta_long["Mes"] = meta_long["MesNome"].map(
-        lambda value: month_number[norm(value)]
-    )
-    meta_long["Meta"] = pd.to_numeric(meta_long["Meta"], errors="coerce").fillna(0)
+    if previous_meta_rows:
+        meta_long = pd.DataFrame(previous_meta_rows)
+        meta_mode = "preservadas da publicação anterior"
+    else:
+        meta_year_col = find_column(pd19, "Ano")
+        meta_rep_col = find_column(pd19, "Cod", "Código", "Repres")
+        meta_name_col = find_column(pd19, "Representante", "Nome Repres")
+        meta_contract_col = find_column(pd19, "Contrato")
+        pd19 = pd19[pd.to_numeric(pd19[meta_year_col], errors="coerce") == year].copy()
+        pd19["RepId"] = pd.to_numeric(pd19[meta_rep_col], errors="coerce").fillna(0)
+        pd19["RepNome"] = pd19[meta_name_col].fillna(pd19[meta_rep_col]).astype(str)
+        pd19["Contrato"] = pd19[meta_contract_col].map(contract_name)
+        pd19["Regiao"] = pd19["RepId"].map(
+            lambda value: index_region.get(
+                int(value),
+                fallback_region.get(value, "NORTE E NORDESTE"),
+            )
+        )
+        contract_position = list(pd19.columns).index(meta_contract_col)
+        month_columns = list(pd19.columns)[contract_position + 2:contract_position + 14]
+        if len(month_columns) != 12:
+            raise SystemExit("ERRO: não foi possível identificar os 12 meses no PD019.")
+        meta_long = pd19.melt(
+            id_vars=["RepId", "RepNome", "Regiao", "Contrato"],
+            value_vars=month_columns,
+            var_name="MesNome",
+            value_name="Meta",
+        )
+        month_number = {column: index + 1 for index, column in enumerate(month_columns)}
+        meta_long["Mes"] = meta_long["MesNome"].map(month_number)
+        meta_long["Meta"] = pd.to_numeric(meta_long["Meta"], errors="coerce").fillna(0)
+        meta_mode = "ETLdados/WWWPD019.xlsx"
 
     keys = ["Mes", "Regiao", "RepId", "Contrato"]
     actual_current = (
@@ -483,6 +530,75 @@ def main() -> None:
         for row in daily_detail.itertuples()
     ]
 
+    eft = pd.read_csv(args.eft018, sep="|", encoding="cp1252", dtype=str)
+    eft.columns = [str(column).strip() for column in eft.columns]
+    eft_date_col = find_column(eft, "Data Emissão")
+    eft_uf_col = find_column(eft, "U.F.", "UF")
+    eft_rep_col = find_column(eft, "Representante")
+    eft_group_col = find_column(eft, "Grp Estoque")
+    eft_rob_col = find_column(eft, "ROB")
+    eft["Data"] = pd.to_datetime(
+        eft[eft_date_col], format="%d/%m/%y", errors="coerce",
+    ).dt.normalize()
+    eft["RepId"] = pd.to_numeric(eft[eft_rep_col], errors="coerce").fillna(0).astype(int)
+    eft["Grupo"] = pd.to_numeric(eft[eft_group_col], errors="coerce").fillna(0).astype(int)
+    eft["Contrato"] = eft["Grupo"].map(EFT_GROUP_CONTRACT).fillna("OUTROS")
+    eft["Regiao"] = eft[eft_uf_col].map(
+        lambda value: UF_REGION.get(
+            UF_CODE_TO_NAME.get(norm(value), norm(value)),
+            "NORTE E NORDESTE",
+        )
+    )
+    eft["Faturado"] = pd.to_numeric(
+        eft[eft_rob_col].astype(str)
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False),
+        errors="coerce",
+    ).fillna(0)
+    eft = eft[(eft["Data"].dt.year == year) & (eft["Data"] <= cutoff)].copy()
+    if eft.empty:
+        raise SystemExit("ERRO: WWEFT018 ficou vazio após aplicar ano e corte.")
+    eft["Mes"] = eft["Data"].dt.month.astype(int)
+    eft_months = sorted(int(value) for value in eft["Mes"].unique())
+    if current_month not in eft_months:
+        raise SystemExit(
+            f"BLOQUEADO: WWEFT018 não contém o mês do corte ({current_month}). "
+            f"Meses encontrados={eft_months}."
+        )
+
+    current_billing = (
+        eft[eft["Contrato"].isin(CONTRACT_ORDER)]
+        .groupby(["Mes", "Regiao", "RepId", "Contrato"], dropna=False)["Faturado"]
+        .sum().reset_index()
+    )
+    previous_billing = [
+        record for record in previous_payload.get("faturamentoRegistros", [])
+        if int(record.get("mes", 0)) not in eft_months
+    ]
+    if not previous_billing and eft_months != required_months:
+        raise SystemExit(
+            "BLOQUEADO: WWEFT018 mensal sem histórico de faturamento preservado. "
+            f"Meses no arquivo={eft_months}; necessários={required_months}."
+        )
+    billing_records = previous_billing + [
+        {
+            "mes": int(row.Mes),
+            "regiao": row.Regiao,
+            "repId": int(row.RepId),
+            "contrato": row.Contrato,
+            "faturado": money(row.Faturado),
+        }
+        for row in current_billing.itertuples()
+    ]
+    eft_gross = money(eft["Faturado"].sum())
+    eft_commercial = money(
+        eft.loc[eft["Contrato"].isin(CONTRACT_ORDER), "Faturado"].sum()
+    )
+    eft_other_groups = sorted(
+        int(value) for value in eft.loc[eft["Contrato"] == "OUTROS", "Grupo"].unique()
+        if int(value) != 0
+    )
+
     history_quality = history_payload.get("qualidade", {}) if history_payload else {}
     history_total = float(history_quality.get("totalGeral", 0))
     history_wallet = float(history_quality.get("carteira", 0))
@@ -496,6 +612,8 @@ def main() -> None:
         "carteiraConciliada": abs(total_wallet - model_wallet) < 0.02,
         "carteiraDentroTotal": total_wallet <= total_general + 0.01,
         "metasPresentes": float(model["Meta"].sum()) > 0,
+        "faturamentoPresente": eft_commercial > 0,
+        "faturamentoDentroBruto": eft_commercial <= eft_gross + 0.01,
     }
     failed_checks = [name for name, passed in checks.items() if not passed]
     if failed_checks:
@@ -527,6 +645,7 @@ def main() -> None:
         "cortes": {
             "realizado": cutoff.strftime("%d/%m/%Y"),
             "carteira": cutoff.strftime("%d/%m/%Y"),
+            "faturamento": cutoff.strftime("%d/%m/%Y"),
             "metas": f"ano de {year}",
         },
         "metaDiaria": {
@@ -543,6 +662,7 @@ def main() -> None:
         "periodos": periods,
         "carteiraDiaria": daily_wallet,
         "carteiraDiariaRegistros": daily_records,
+        "faturamentoRegistros": billing_records,
         "qualidade": {
             "checks": checks,
             "mesesPD010": coverage_months,
@@ -551,6 +671,11 @@ def main() -> None:
             "linhasPD010": int(len(pd10)),
             "linhasHistoricoOrigem": int(history_quality.get("linhasPD010", 0)),
             "linhasPD019": int(len(pd19)),
+            "linhasEFT018": int(len(eft)),
+            "mesesEFT018": eft_months,
+            "faturamentoBrutoEFT018": eft_gross,
+            "faturamentoComercialEFT018": eft_commercial,
+            "gruposFaturamentoOutros": eft_other_groups,
             "totalGeral": total_general,
             "carteira": total_wallet,
             "semCarteira": money(total_general - total_wallet),
@@ -563,6 +688,8 @@ def main() -> None:
             "dados-historicos.json — meses encerrados",
             "ETLdados/WWWPD010.xlsx — mês atual, total geral e carteira",
             "ETLdados/WWWPD019.xlsx — metas comerciais",
+            f"Metas comerciais {meta_mode}",
+            "ETLdados/WWEFT018.LST — faturamento bruto; grupos não comerciais excluídos",
             "ETLdados/INDEX.xlsx — regiões e representantes",
         ],
     }
@@ -583,6 +710,8 @@ def main() -> None:
         "carteira": total_wallet,
         "metaMensal": money(current_meta),
         "metaAteCorte": money(current_meta * target_ratio),
+        "faturamentoBruto": eft_gross,
+        "faturamentoComercial": eft_commercial,
         "checks": checks,
     }, ensure_ascii=False))
 
