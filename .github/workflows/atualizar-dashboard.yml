@@ -44,7 +44,8 @@ jobs:
             test -s "_fontes/ETLdados/$arquivo"
             alteracao=$(git -C _fontes/ETLdados log -1 --format=%ct -- "$arquivo")
             idade=$((agora - alteracao))
-            if [ "$arquivo" != "INDEX.xlsx" ] && [ "$idade" -gt 129600 ]; then
+            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
+              && [ "$idade" -gt 129600 ]; then
               echo "::error::$arquivo não foi atualizado nas últimas 36 horas."
               exit 1
             fi
