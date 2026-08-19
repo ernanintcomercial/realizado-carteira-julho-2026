@@ -18,11 +18,11 @@ CONTRACTS = {
 CONTRACT_ORDER = ["ALUMÍNIO", "PLÁSTICO", "LED", "EX"]
 REGION_ORDER = ["SUL E CENTRO OESTE", "SUDESTE", "NORTE E NORDESTE"]
 EFT_GROUP_CONTRACT = {
-    1: "ALUMÍNIO", 5: "ALUMÍNIO", 8: "ALUMÍNIO", 74: "ALUMÍNIO",
+    1: "ALUMÍNIO", 5: "ALUMÍNIO", 8: "ALUMÍNIO", 51: "ALUMÍNIO", 74: "ALUMÍNIO",
     12: "PLÁSTICO", 13: "PLÁSTICO", 16: "PLÁSTICO", 18: "PLÁSTICO",
     19: "PLÁSTICO", 21: "PLÁSTICO", 23: "PLÁSTICO", 26: "PLÁSTICO",
     28: "PLÁSTICO", 29: "PLÁSTICO",
-    4: "LED", 6: "LED", 7: "LED", 24: "LED",
+    4: "LED", 6: "LED", 7: "LED", 9: "LED", 24: "LED",
     2: "EX", 3: "EX",
 }
 MONTH_NAMES = [
@@ -49,7 +49,7 @@ UF_CODE_TO_NAME = {
     "RJ": "RIO DE JANEIRO", "RN": "RIO GRANDE DO NORTE",
     "RS": "RIO GRANDE DO SUL", "RO": "RONDONIA", "RR": "RORAIMA",
     "SC": "SANTA CATARINA", "SP": "SAO PAULO", "SE": "SERGIPE",
-    "TO": "TOCANTINS",
+    "TO": "TOCANTINS", "TOCANTIS": "TOCANTINS",
 }
 UF_REGION = {
     **{x: "NORTE E NORDESTE" for x in [
@@ -530,7 +530,9 @@ def main() -> None:
         for row in daily_detail.itertuples()
     ]
 
-    eft = pd.read_csv(args.eft018, sep="|", encoding="cp1252", dtype=str)
+    # O Totvs pode gravar caracteres fora do cp1252 em descrições de produto.
+    # Latin-1 preserva as colunas e evita bloquear a atualização por esse ruído.
+    eft = pd.read_csv(args.eft018, sep="|", encoding="latin1", dtype=str)
     eft.columns = [str(column).strip() for column in eft.columns]
     eft_date_col = find_column(eft, "Data Emissão")
     eft_uf_col = find_column(eft, "U.F.", "UF")
