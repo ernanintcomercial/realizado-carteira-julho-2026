@@ -297,6 +297,10 @@ function dailyHover(event){
 function selectPeriod(){
   period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
 }
+function currentMonthPeriod(){
+  const month=Number(data.metaDiaria?.mes)||new Date().getMonth()+1;
+  return data.periodos.find(x=>x.id===`M${String(month).padStart(2,'0')}`)||data.periodos[0];
+}
 function filterRepresentative(repId){
   const id=String(repId),ids=selectedRepIds(),next=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];$('repSelect').value=next.join(',');const chosen=repChoices.filter(r=>next.includes(String(r.repId)));$('repSearch').value=chosen.map(r=>r.representante).join(', ');updateRepOptions();render();
 }
@@ -309,16 +313,16 @@ $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='d
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
   $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('rankingSort').onchange=render;$('repSearch').oninput=searchRepresentative;
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
-  $('clearBtn').onclick=()=>{$('periodSelect').value='YTD';$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';period=data.periodos[0];$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
+  $('clearBtn').onclick=()=>{period=currentMonthPeriod();$('periodSelect').value=period.id;$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
 
 fetch('dados-gerenciais.json?v=45').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
-  data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');$('periodSelect').value='YTD';
+  data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');period=currentMonthPeriod();$('periodSelect').value=period.id;
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
-  period=data.periodos[0];updateRepOptions();render();$('loading').style.display='none';
+  updateRepOptions();render();$('loading').style.display='none';
 }).catch(e=>{$('loading').textContent='Erro: '+e.message});
 </script>
 </body>
