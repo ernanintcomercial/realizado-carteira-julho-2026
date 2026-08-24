@@ -167,8 +167,6 @@ def main() -> None:
 
     today = pd.Timestamp(args.as_of).normalize() if args.as_of else pd.Timestamp.now().normalize()
     cutoff = (today - pd.Timedelta(days=1)).normalize()
-    while cutoff.weekday() >= 5 or cutoff.strftime("%Y-%m-%d") in holidays:
-        cutoff -= pd.Timedelta(days=1)
     year = int(cutoff.year)
     current_month = int(cutoff.month)
 
@@ -569,8 +567,7 @@ def main() -> None:
         )
 
     current_billing = (
-        eft[eft["Contrato"].isin(CONTRACT_ORDER)]
-        .groupby(["Mes", "Regiao", "RepId", "Contrato"], dropna=False)["Faturado"]
+        eft.groupby(["Mes", "Regiao", "RepId", "Contrato"], dropna=False)["Faturado"]
         .sum().reset_index()
     )
     previous_billing = [
@@ -614,7 +611,7 @@ def main() -> None:
         "carteiraConciliada": abs(total_wallet - model_wallet) < 0.02,
         "carteiraDentroTotal": total_wallet <= total_general + 0.01,
         "metasPresentes": float(model["Meta"].sum()) > 0,
-        "faturamentoPresente": eft_commercial > 0,
+        "faturamentoPresente": eft_gross > 0,
         "faturamentoDentroBruto": eft_commercial <= eft_gross + 0.01,
     }
     failed_checks = [name for name, passed in checks.items() if not passed]
@@ -691,7 +688,7 @@ def main() -> None:
             "ETLdados/WWWPD010.xlsx — mês atual, total geral e carteira",
             "ETLdados/WWWPD019.xlsx — metas comerciais",
             f"Metas comerciais {meta_mode}",
-            "ETLdados/WWEFT018.LST — faturamento bruto; grupos não comerciais excluídos",
+            "ETLdados/WWEFT018.LST — faturamento bruto; grupos não comerciais mantidos no KPI e ocultos no desempenho por contrato",
             "ETLdados/INDEX.xlsx — regiões e representantes",
         ],
     }
