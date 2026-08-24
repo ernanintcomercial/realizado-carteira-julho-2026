@@ -51,6 +51,7 @@
     <div class="field"><label>Contrato</label><select class="control" id="contractSelect"><option value="">Todos os contratos</option></select></div>
     <div class="field rep-picker"><label>Representante</label><input class="control" id="repSearch" placeholder="Selecione representantes" autocomplete="off"><div class="rep-menu" id="repMenu"></div><input type="hidden" id="repSelect"></div>
     <button class="btn" id="clearBtn">Limpar filtros</button>
+    <button class="btn" id="printBtn" hidden>🖨️ Imprimir resultados</button>
   </section>
 
   <nav class="tabs">
@@ -115,6 +116,59 @@ const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]|
 const contractKey=value=>{const t=String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();if(t.startsWith('ALUM'))return 'ALUMINIO';if(t.startsWith('PL'))return 'PLASTICO';if(t==='LED')return 'LED';if(t==='EX')return 'EX';return 'OUTROS'};
  let data,period,rows=[],repChoices=[],abcClassFilter='';
 const selectedRepIds=()=>($('repSelect').value||'').split(',').map(x=>x.trim()).filter(Boolean);
+const PRINT_REPRESENTATIVES=[
+  ['SUL E CENTRO OESTE','SC','JOINVILLE','9945','DENNIS','DENNIS RONALDO DE OLIVEIRA','DENNIS'],
+  ['SUL E CENTRO OESTE','PR','CURITIBA','9520','KATO','CAYMARK REPRESENTAÇÕES COMERCIAIS'],
+  ['SUL E CENTRO OESTE','PR','CORBÉLIA','9962','LUIS','L. C. BECK - REPRESENTAÇÕES COMERCIAIS'],
+  ['SUL E CENTRO OESTE','SC','CHAPECÓ','9080','LAURO','F1 REPRESENTAÇÕES COMERCIAIS'],
+  ['SUL E CENTRO OESTE','SC','JOINVILLE','9795','RAFAEL','RJS REPRESENTAÇÃO COMERCIAL'],
+  ['SUL E CENTRO OESTE','PR','LONDRINA','9893','LUIS FERNANDO','SANTOS & CORREA REPRESENTAÇÕES'],
+  ['SUL E CENTRO OESTE','RS','SANTA ROSA','9916','LAUDIR','ANDERLE REPRESENTAÇÕES COMERCIAIS'],
+  ['SUL E CENTRO OESTE','RS','SAPIRANGA','9885','LILIAN','FOTOLUMEN COM E REPRESENTAÇÃO'],
+  ['SUL E CENTRO OESTE','RS','PELOTAS','9952','MOACIR','PATRICIA MENDES'],
+  ['SUL E CENTRO OESTE','RS','CAXIAS DO SUL','9915','BREDA','JEITO URBANO CONFECCOES'],
+  ['SUL E CENTRO OESTE','SC','CHAPECÓ','9960','VINICIUS','J. J. SCHMIDT REPRESENTAÇÕES'],
+  ['SUL E CENTRO OESTE','MS','CAMPO GRANDE','9792','CLAUDINEY','LIGHT REPRESENTAÇÕES LTDA'],
+  ['SUL E CENTRO OESTE','MT','VÁRZEA GRANDE','8012','THAYANE','REPAN COMÉRCIO E REPRESENTAÇÕES'],
+  ['SUL E CENTRO OESTE','MT','CAMPO NOVO DO PARECIS','9955','WEYGHON','MM SOLUÇÕES E PROJETOS'],
+  ['SUL E CENTRO OESTE','GO','GOIÂNIA','9939','RICARDO','DECASTRO REPRESENTAÇÃO'],
+  ['SUL E CENTRO OESTE','DF','BRASÍLIA','9870','CARLOS','ROCA REPRESENTAÇÕES LTDA'],
+  ['SUDESTE','SP','SÃO PAULO','4805','FILIAL SP','SERGIO MORETO'],
+  ['SUDESTE','ES','VILA VELHA','9680','EUCLIDES','CAMPOS & CÂMARA REPRESENTAÇÕES'],
+  ['SUDESTE','MG','BELO HORIZONTE','9640','CAROL','CLOVIS NEUMANN MARTINS REP.'],
+  ['SUDESTE','SP','LIMEIRA','9886','DANIEL','PRÁTICA REPRESENTAÇÕES'],
+  ['SUDESTE','SP','JUNDIAÍ','9907','FERNANDO','TRATTO REPRESENTAÇÕES'],
+  ['SUDESTE','RJ','MAGÉ','9820','AZEREDO','AZEREDO REPRESENTAÇÕES'],
+  ['SUDESTE','SP','SÃO JOSÉ DOS CAMPOS','9290','RINALDO','BOTELHO CICONELI REPRESENTAÇÕES'],
+  ['SUDESTE','SP','SÃO PAULO','9883','CLEBER','CGK P. REPRESENTAÇÃO COMERCIAL'],
+  ['SUDESTE','SP','BAURU','7097','GILBERTO','CRUZ REPRESENTAÇÕES COMERCIAIS'],
+  ['SUDESTE','RJ','BARRA DA TIJUCA','9961','PEDRO','P. L. MOREIRA REPRESENTAÇÕES'],
+  ['SUDESTE','SP','JUNDIAÍ','9911','DIEGO','IDEAL CONSULTORIA E REPRESENTAÇÃO'],
+  ['SUDESTE','MG','JUIZ DE FORA','9891','IGOR','IGOR NOGUEIRA VOLTAIRE'],
+  ['SUDESTE','MG','UBERLANDIA','9860','MAURICIO','LANJO REPRESENTACOES'],
+  ['SUDESTE','SP','RIBEIRÃO PRETO','9897','RODRIGO','V.G. REPRESENTAÇÕES E NEGÓCIOS'],
+  ['SUDESTE','MG','BELO HORIZONTE','8005','MÁRCIO','RAPOSO REPRESENTAÇÕES'],
+  ['SUDESTE','INTERNA SP','SANTA GERTRUDES','9932','EDNALDO','EDNALDO DE LIMA FERREIRA JUNIOR'],
+  ['SUDESTE','INTERNA SP','SÃO PAULO','4803','WALTER','WALTER MARTINELLI'],
+  ['SUDESTE','INTERNA SP','SÃO CAETANO DO SUL','9963','DANIEL','DANIEL IVAN ROCHA'],
+  ['NORTE E NORDESTE','RO','PORTO VELHO','9510','FÁBIO','F.H.M. DE ARAUJO REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','AM','MANAUS','9580','FILIPI','FX REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','PA','BELÉM','9923','LUCIO','LUCIO VALENTE & CIA'],
+  ['NORTE E NORDESTE','TO','PALMAS','9890','UEDERSON','COSTA & SOUZA REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','PA','SANTARÉM','9896','EZERIEL','MATOS E GOMES SERVIÇOS'],
+  ['NORTE E NORDESTE','BA','SÃO FELIPE','9894','JEFFREY','J. F. REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','BA','FEIRA DE SANTANA','9944','RODRIGO','R. ALVES REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','MA','SÃO LUIZ','9940','ANTONIO','AC & CÉU REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','BA','SALVADOR','7064','GABRIEL','B. C. L. REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','CE','FORTALEZA','9957','DANUBIA','J.N. MENDES JUNIOR'],
+  ['NORTE E NORDESTE','PE','CARUARU','9913','JUNIOR','BEZERRA & VIEGAS REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','PB','JOÃO PESSOA','8045','MIGUEL','MAC REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','PE','PETROLINA','9740','SERGIO','RIO SUL REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','PE','RECIFE','9010','KATTYANE','SOUZA & MOTTA REPRESENTAÇÕES'],
+  ['NORTE E NORDESTE','AL','SATUBA','9560','CHAVES','VASCONCELOS E VASCONCELOS REP.'],
+  ['INTERNO','INTERNO','INTERNO','9958','KEYLA','KEYLA KAROLINE FERREIRA DE MORAIS'],
+  ['INTERNO','INTERNO','INTERNO','9945','VENDAS TECNICAS','VENDAS TECNICAS','VENDAS TEC']
+];
 // Dados do anexo TABELA_FINAL.xlsx (Mes + Regiao + ID Representante + Contrato), ja agregados
 // por mes/regiao/representante/contrato. Embutidos aqui de forma TEMPORARIA, apenas para
 // alimentar o quadro "Desempenho por contrato" enquanto o ETL nao gera "faturamentoRegistros"
@@ -308,16 +362,48 @@ function filterContract(contract){
   $('contractSelect').value=$('contractSelect').value===contract?'':contract;
   render();
 }
+function normalizedText(value){return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase()}
+function printMoney(value){return (+value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0})}
+function escapePrint(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+function printResults(){
+  if(!data||data.ordemRegioes.length!==3)return;
+  const base=adjustedPeriodRows(period),contracts=['ALUMINIO','PLASTICO','LED','EX'];
+  const labels={'SUL E CENTRO OESTE':'Sul e Centro-Oeste','SUDESTE':'Sudeste','NORTE E NORDESTE':'Norte e Nordeste','INTERNO':'Interno'};
+  const groups=['SUL E CENTRO OESTE','SUDESTE','NORTE E NORDESTE','INTERNO'];
+  const reportRows=PRINT_REPRESENTATIVES.map(item=>{
+    const [region,state,city,repId,name,company,nameMatch]=item;
+    const matches=base.filter(row=>String(row.repId)===repId&&(!nameMatch||normalizedText(row.representante).includes(normalizedText(nameMatch))));
+    const values=Object.fromEntries(contracts.map(contract=>[contract,matches.filter(row=>contractKey(row.contrato)===contract).reduce((total,row)=>total+(+row.realizado||0),0)]));
+    return {region,state,city,repId,name,company,values,total:contracts.reduce((total,contract)=>total+values[contract],0)};
+  });
+  const sumRows=(items,contract)=>items.reduce((total,row)=>total+(contract?row.values[contract]:row.total),0);
+  let body='';
+  groups.forEach(region=>{
+    const items=reportRows.filter(row=>row.region===region);
+    items.forEach(row=>{body+=`<tr><td>${escapePrint(labels[row.region])}</td><td>${escapePrint(row.state)}</td><td>${escapePrint(row.city)}</td><td>${escapePrint(`${row.repId} - ${row.name} | ${row.company}`)}</td>${contracts.map(contract=>`<td class="num">${printMoney(row.values[contract])}</td>`).join('')}<td class="num">${printMoney(row.total)}</td></tr>`});
+    body+=`<tr class="subtotal"><td colspan="4">Subtotal ${escapePrint(labels[region])} (${items.length} representantes)</td>${contracts.map(contract=>`<td class="num">${printMoney(sumRows(items,contract))}</td>`).join('')}<td class="num">${printMoney(sumRows(items))}</td></tr>`;
+  });
+  body+=`<tr class="grand"><td colspan="4">Total Brasil - ${reportRows.length} registros</td>${contracts.map(contract=>`<td class="num">${printMoney(sumRows(reportRows,contract))}</td>`).join('')}<td class="num">${printMoney(sumRows(reportRows))}</td></tr>`;
+  const popup=window.open('','_blank');
+  if(!popup){alert('Permita a abertura da janela de impressão para continuar.');return}
+  const periodLabel=period?.label||$('periodSelect').selectedOptions[0]?.textContent||'Período selecionado';
+  popup.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Resultados comerciais - ${escapePrint(periodLabel)}</title><style>
+    @page{size:A4 landscape;margin:4mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#172033;background:#fff;font-family:Arial,sans-serif}body{width:289mm}.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:.4mm solid #172033;padding-bottom:1mm;margin-bottom:1mm}.head h1{font-size:8.5pt;margin:0}.head p,.meta{font-size:5pt;margin:.5mm 0 0;color:#5c6675}.meta{text-align:right}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:4.5pt;line-height:1}th{background:#172033;color:#fff;text-align:left;text-transform:uppercase;padding:.7mm .6mm}td{border-bottom:.1mm solid #dce2ea;padding:.42mm .6mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}th:nth-child(1){width:25mm}th:nth-child(2){width:14mm}th:nth-child(3){width:29mm}th:nth-child(4){width:91mm}th:nth-child(n+5){width:26mm}.num{text-align:right}.subtotal td{font-weight:bold;background:#eef3f9;border-top:.2mm solid #a8b3c2}.grand td{font-weight:bold;background:#172033;color:#fff;border:0}.foot{display:flex;justify-content:space-between;font-size:4.5pt;color:#5c6675;margin-top:.6mm}@media screen{body{margin:8mm auto;box-shadow:0 2mm 8mm #0002;padding:5mm;width:297mm}}
+  </style></head><body><header class="head"><div><h1>WETZEL - RESULTADOS COMERCIAIS POR REPRESENTANTE</h1><p>${escapePrint(periodLabel)} | Total Geral do período selecionado</p></div><div class="meta">Realizado até ${escapePrint(data.cortes.realizado)}<br>Gerado em ${escapePrint(data.geradoEm)}</div></header><table><thead><tr><th>Região</th><th>Estado</th><th>Cidade</th><th>Código - nome | representação</th><th class="num">Alumínio</th><th class="num">Plástico</th><th class="num">LED</th><th class="num">EX</th><th class="num">Total</th></tr></thead><tbody>${body}</tbody></table><footer class="foot"><span>Fonte: Painel Comercial Integrado</span><span>Página 1 de 1</span></footer><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),150));<\/script></body></html>`);
+  popup.document.close();
+}
 function applyTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('commercial-theme',t);$('themeBtn').textContent=t==='dark'?'☀️ Claro':'🌙 Escuro'}
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');applyTheme(localStorage.getItem('commercial-theme')||'light');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active')});
   $('periodSelect').onchange=selectPeriod;$('regionSelect').onchange=()=>{updateRepOptions();render()};$('contractSelect').onchange=render;$('rankingSort').onchange=render;$('repSearch').oninput=searchRepresentative;
 $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepresentative()}};
   $('clearBtn').onclick=()=>{period=currentMonthPeriod();$('periodSelect').value=period.id;$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
+  $('printBtn').onclick=printResults;
 
 fetch('dados-gerenciais.json?v=45').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');period=currentMonthPeriod();$('periodSelect').value=period.id;
   const regiaoRestrita=data.ordemRegioes.length===1;
+  $('printBtn').hidden=regiaoRestrita;
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
