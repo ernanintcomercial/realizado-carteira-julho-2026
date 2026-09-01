@@ -2,9 +2,9 @@ name: Atualizar dashboard comercial
 
 on:
   workflow_dispatch:
-  # 06:30 no horário de Brasília (UTC-3), após a chegada dos arquivos ao ETLdados.
+  # 07:00 no horário de Brasília (UTC-3), após a chegada dos arquivos ao ETLdados.
   schedule:
-    - cron: "30 9 * * 1-5"
+    - cron: "0 10 * * 1-5"
 
 permissions:
   contents: write
@@ -43,13 +43,20 @@ jobs:
         run: |
           set -euo pipefail
           agora=$(date +%s)
+          hoje=$(TZ=America/Sao_Paulo date +%F)
           for arquivo in WWWPD010.xlsx WWWPD019.xlsx WWEFT018.LST INDEX.xlsx; do
             test -s "_fontes/ETLdados/$arquivo"
             alteracao=$(git -C _fontes/ETLdados log -1 --format=%ct -- "$arquivo")
             idade=$((agora - alteracao))
+            data_alteracao=$(TZ=America/Sao_Paulo date -d "@$alteracao" +%F)
             if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
               && [ "$idade" -gt 129600 ]; then
               echo "::error::$arquivo não foi atualizado nas últimas 36 horas."
+              exit 1
+            fi
+            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
+              && [ "$data_alteracao" != "$hoje" ]; then
+              echo "::error::$arquivo não recebeu a extração de hoje (última atualização: $data_alteracao)."
               exit 1
             fi
           done
