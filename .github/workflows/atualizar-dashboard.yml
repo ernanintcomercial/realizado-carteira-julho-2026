@@ -2,6 +2,9 @@ name: Atualizar dashboard comercial
 
 on:
   workflow_dispatch:
+  # 06:30 no horário de Brasília (UTC-3), após a chegada dos arquivos ao ETLdados.
+  schedule:
+    - cron: "30 9 * * 1-5"
 
 permissions:
   contents: write
