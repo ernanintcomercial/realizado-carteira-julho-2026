@@ -21,6 +21,9 @@ jobs:
       - name: Baixar dashboard
         uses: actions/checkout@v4
 
+      - name: Sincronizar com a versão publicada
+        run: git pull --ff-only origin main
+
       - name: Baixar fontes privadas
         uses: actions/checkout@v4
         with:
