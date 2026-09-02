@@ -64,6 +64,13 @@ jobs:
             fi
           done
 
+      - name: Consolidar mês encerrado no histórico
+        run: |
+          python etl/consolidar_historico.py \
+            --history dados-historicos.json \
+            --dashboard dados-gerenciais.json \
+            --as-of "$(TZ=America/Sao_Paulo date +%F)"
+
       - name: Executar ETL e validações
         run: |
           python etl/gerar_dashboard.py \
@@ -79,12 +86,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- dados-gerenciais.json; then
+          if git diff --quiet -- dados-gerenciais.json dados-historicos.json; then
             echo "Nenhuma alteração nos dados."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dados-gerenciais.json
+          git add dados-gerenciais.json dados-historicos.json
           git commit -m "data: atualização automática do dashboard"
           git push

@@ -203,6 +203,21 @@ def main() -> None:
                 f"ERRO: base histórica pertence ao ano {history_payload.get('ano')}, "
                 f"mas o corte pertence a {year}."
             )
+        if current_month > 1:
+            expected_history_cutoff = (
+                pd.Timestamp(year, current_month, 1) - pd.Timedelta(days=1)
+            ).normalize()
+            history_cutoff = pd.to_datetime(
+                history_payload.get("cortes", {}).get("realizado"),
+                format="%d/%m/%Y",
+                errors="coerce",
+            )
+            if pd.isna(history_cutoff) or history_cutoff.normalize() < expected_history_cutoff:
+                received = "ausente" if pd.isna(history_cutoff) else history_cutoff.strftime("%d/%m/%Y")
+                raise SystemExit(
+                    "BLOQUEADO: histórico não está consolidado até o último dia do mês fechado. "
+                    f"Esperado={expected_history_cutoff.strftime('%d/%m/%Y')}; recebido={received}."
+                )
         for month in range(1, current_month):
             period_id = f"M{month:02}"
             period = next(
