@@ -57,8 +57,10 @@ jobs:
               echo "::error::$arquivo não foi atualizado nas últimas 36 horas."
               exit 1
             fi
-            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
-              && [ "$data_alteracao" != "$hoje" ]; then
+            # O EFT018 pode ser reextraído sem alteração de conteúdo; nesse caso o
+            # Git preserva a data do último commit. A idade máxima acima continua
+            # protegendo contra uma fonte realmente desatualizada.
+            if [ "$arquivo" = "WWWPD010.xlsx" ] && [ "$data_alteracao" != "$hoje" ]; then
               echo "::error::$arquivo não recebeu a extração de hoje (última atualização: $data_alteracao)."
               exit 1
             fi
