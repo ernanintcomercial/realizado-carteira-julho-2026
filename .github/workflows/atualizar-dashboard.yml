@@ -47,12 +47,12 @@ jobs:
           set -euo pipefail
           agora=$(date +%s)
           hoje=$(TZ=America/Sao_Paulo date +%F)
-          for arquivo in WWWPD010.xlsx WWWPD019.xlsx WWEFT018.LST INDEX.xlsx; do
+          for arquivo in WWWPD010.xlsx WWWPD010_CARTEIRA.xlsx WWWPD019.xlsx WWEFT018.LST INDEX.xlsx; do
             test -s "_fontes/ETLdados/$arquivo"
             alteracao=$(git -C _fontes/ETLdados log -1 --format=%ct -- "$arquivo")
             idade=$((agora - alteracao))
             data_alteracao=$(TZ=America/Sao_Paulo date -d "@$alteracao" +%F)
-            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
+            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWWPD010_CARTEIRA.xlsx" ] || [ "$arquivo" = "WWEFT018.LST" ]; } \
               && [ "$idade" -gt 129600 ]; then
               echo "::error::$arquivo não foi atualizado nas últimas 36 horas."
               exit 1
@@ -60,7 +60,8 @@ jobs:
             # O EFT018 pode ser reextraído sem alteração de conteúdo; nesse caso o
             # Git preserva a data do último commit. A idade máxima acima continua
             # protegendo contra uma fonte realmente desatualizada.
-            if [ "$arquivo" = "WWWPD010.xlsx" ] && [ "$data_alteracao" != "$hoje" ]; then
+            if { [ "$arquivo" = "WWWPD010.xlsx" ] || [ "$arquivo" = "WWWPD010_CARTEIRA.xlsx" ]; } \
+              && [ "$data_alteracao" != "$hoje" ]; then
               echo "::error::$arquivo não recebeu a extração de hoje (última atualização: $data_alteracao)."
               exit 1
             fi
@@ -77,6 +78,7 @@ jobs:
         run: |
           python etl/gerar_dashboard.py \
             --pd010 _fontes/ETLdados/WWWPD010.xlsx \
+            --carteira _fontes/ETLdados/WWWPD010_CARTEIRA.xlsx \
             --pd019 _fontes/ETLdados/WWWPD019.xlsx \
             --eft018 _fontes/ETLdados/WWEFT018.LST \
             --index _fontes/ETLdados/INDEX.xlsx \

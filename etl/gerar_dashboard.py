@@ -133,6 +133,12 @@ def business_days(start: pd.Timestamp, end: pd.Timestamp, holidays: set[str]) ->
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Gera os dados do dashboard comercial.")
     parser.add_argument("--pd010", type=Path, required=True)
+    parser.add_argument(
+        "--carteira",
+        type=Path,
+        required=True,
+        help="PD010 somente com itens Abertos e Atendido Parcial.",
+    )
     parser.add_argument("--pd019", type=Path, required=True)
     parser.add_argument("--eft018", type=Path, required=True)
     parser.add_argument("--index", type=Path, required=True)
@@ -154,7 +160,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    sources = [args.pd010, args.pd019, args.eft018, args.index]
+    sources = [args.pd010, args.carteira, args.pd019, args.eft018, args.index]
     if args.history:
         sources.append(args.history)
     for source in sources:
@@ -177,6 +183,7 @@ def main() -> None:
             previous_payload = candidate
 
     pd10 = pd.read_excel(args.pd010, sheet_name=0, header=1)
+    carteira = pd.read_excel(args.carteira, sheet_name=0, header=1)
     pd19 = pd.read_excel(args.pd019, sheet_name=0, header=1)
     index_df = pd.read_excel(args.index, sheet_name=0)
 
@@ -264,11 +271,6 @@ def main() -> None:
         lambda x: UF_CODE_TO_NAME.get(norm(x), norm(x))
     )
     pd10["ROBValor"] = pd.to_numeric(pd10[rob_col], errors="coerce").fillna(0)
-    pd10["CarteiraValor"] = pd10.apply(
-        lambda row: row["ROBValor"] if is_wallet_status(row[status_col]) else 0,
-        axis=1,
-    )
-
     index_code_col = find_column(index_df, "codigo", "código")
     index_name_col = find_column(index_df, "nome")
     index_region_col = find_column(index_df, "região", "regiao")
@@ -305,6 +307,80 @@ def main() -> None:
         return fallback_region.get(rep_id, "NORTE E NORDESTE")
 
     pd10["Regiao"] = pd10.apply(sales_region, axis=1)
+
+    wallet_date_col = find_column(carteira, "Dt Entrega")
+    wallet_status_col = find_column(carteira, "Situação Item")
+    wallet_rob_col = find_column(carteira, "ROB")
+    wallet_ordered_col = find_column(carteira, "Qtde Pedida")
+    wallet_billed_col = find_column(carteira, "Qtde Faturada")
+    wallet_type_col = find_column(carteira, "Tipo Pedido")
+    wallet_rep_col = find_column(carteira, "Repres")
+    wallet_rep_name_col = find_column(carteira, "Nome Repres")
+    wallet_uf_col = find_column(carteira, "UF")
+    wallet_client_id_col = find_column(carteira, "Cliente")
+    wallet_client_name_col = find_column(carteira, "Nome Cliente")
+
+    carteira["Status"] = carteira[wallet_status_col].map(norm)
+    unexpected_wallet_statuses = sorted(
+        value for value in carteira["Status"].dropna().unique()
+        if not is_wallet_status(value)
+    )
+    if unexpected_wallet_statuses:
+        raise SystemExit(
+            "BLOQUEADO: fonte de carteira contém situações fora de Abertos/Atendido Parcial: "
+            + ", ".join(unexpected_wallet_statuses)
+        )
+    carteira = carteira[carteira["Status"].map(is_wallet_status)].copy()
+    carteira["DataEntrega"] = pd.to_datetime(
+        carteira[wallet_date_col], errors="coerce"
+    ).dt.normalize()
+    carteira["ROBValor"] = pd.to_numeric(
+        carteira[wallet_rob_col], errors="coerce"
+    ).fillna(0)
+    carteira["QtdePedida"] = pd.to_numeric(
+        carteira[wallet_ordered_col], errors="coerce"
+    ).fillna(0)
+    carteira["QtdeFaturada"] = pd.to_numeric(
+        carteira[wallet_billed_col], errors="coerce"
+    ).fillna(0)
+    invalid_quantity = carteira[(carteira["QtdePedida"] <= 0) & (carteira["ROBValor"] != 0)]
+    if not invalid_quantity.empty:
+        raise SystemExit(
+            "BLOQUEADO: fonte de carteira contém ROB com quantidade pedida zerada "
+            f"({len(invalid_quantity)} linhas)."
+        )
+    carteira["SaldoQtd"] = (
+        carteira["QtdePedida"] - carteira["QtdeFaturada"]
+    ).clip(lower=0)
+    carteira["CarteiraValor"] = (
+        carteira["ROBValor"]
+        .div(carteira["QtdePedida"].where(carteira["QtdePedida"] > 0, 1))
+        .mul(carteira["SaldoQtd"])
+    )
+    carteira["Mes"] = carteira["DataEntrega"].dt.month
+    carteira["AnoEntrega"] = carteira["DataEntrega"].dt.year
+    carteira["Contrato"] = carteira[wallet_type_col].map(contract_name)
+    carteira["RepId"] = pd.to_numeric(
+        carteira[wallet_rep_col], errors="coerce"
+    ).fillna(0)
+    carteira["RepNome"] = carteira[wallet_rep_name_col].fillna(
+        carteira[wallet_rep_col]
+    ).astype(str)
+    carteira["ClienteId"] = pd.to_numeric(
+        carteira[wallet_client_id_col], errors="coerce"
+    ).fillna(0).astype(int)
+    carteira["ClienteNome"] = carteira[wallet_client_name_col].fillna(
+        carteira[wallet_client_id_col]
+    ).astype(str)
+    carteira["UFNome"] = carteira[wallet_uf_col].map(
+        lambda x: UF_CODE_TO_NAME.get(norm(x), norm(x))
+    )
+    carteira["Regiao"] = carteira.apply(sales_region, axis=1)
+    carteira_ano = carteira[carteira["AnoEntrega"] == year].copy()
+    if carteira_ano.empty:
+        raise SystemExit(
+            f"ERRO: fonte de carteira não contém entregas abertas em {year}."
+        )
 
     # As metas publicadas permanecem congeladas até a gerência validar uma
     # alteração. O PD019 continua sendo recebido e validado, mas não deve
@@ -365,7 +441,13 @@ def main() -> None:
     actual_current = (
         pd10[pd10["Contrato"].isin(CONTRACT_ORDER)]
         .groupby(keys, dropna=False)
-        .agg(Realizado=("ROBValor", "sum"), Carteira=("CarteiraValor", "sum"))
+        .agg(Realizado=("ROBValor", "sum"))
+        .reset_index()
+    )
+    wallet_current = (
+        carteira_ano[carteira_ano["Contrato"].isin(CONTRACT_ORDER)]
+        .groupby(keys, dropna=False)
+        .agg(Carteira=("CarteiraValor", "sum"))
         .reset_index()
     )
     history_names: dict[int, str] = {}
@@ -377,7 +459,6 @@ def main() -> None:
                 "RepId": int(record["repId"]),
                 "Contrato": record["contrato"],
                 "Realizado": float(record.get("realizado", 0)),
-                "Carteira": float(record.get("carteira", 0)),
             }
             for record in history_records
             if record["contrato"] in CONTRACT_ORDER
@@ -388,7 +469,7 @@ def main() -> None:
         }
         actual = pd.concat([history_actual, actual_current], ignore_index=True)
         actual = (
-            actual.groupby(keys, dropna=False)[["Realizado", "Carteira"]]
+            actual.groupby(keys, dropna=False)[["Realizado"]]
             .sum().reset_index()
         )
     else:
@@ -398,7 +479,9 @@ def main() -> None:
         .groupby(keys, dropna=False)["Meta"]
         .sum().reset_index()
     )
-    model = meta.merge(actual, how="outer", on=keys)
+    model = meta.merge(actual, how="outer", on=keys).merge(
+        wallet_current, how="outer", on=keys
+    )
     model[["Meta", "Realizado", "Carteira"]] = model[
         ["Meta", "Realizado", "Carteira"]
     ].fillna(0)
@@ -409,7 +492,13 @@ def main() -> None:
                 int(value),
                 pd10.loc[pd10["RepId"] == value, "RepNome"].iloc[0]
                 if (pd10["RepId"] == value).any()
-                else str(int(value)),
+                else (
+                    carteira_ano.loc[
+                        carteira_ano["RepId"] == value, "RepNome"
+                    ].iloc[0]
+                    if (carteira_ano["RepId"] == value).any()
+                    else str(int(value))
+                ),
             ),
         )
     )
@@ -441,10 +530,26 @@ def main() -> None:
         ]
 
     def client_records_for(months: list[int]) -> list[dict[str, object]]:
-        scope = pd10[pd10["Mes"].isin(months) & pd10["Contrato"].isin(CONTRACT_ORDER)]
-        grouped = scope.groupby(["Regiao", "ClienteId", "ClienteNome"], dropna=False).agg(
-            realizado=("ROBValor", "sum"), carteira=("CarteiraValor", "sum"),
-        ).reset_index()
+        client_keys = ["Regiao", "ClienteId", "ClienteNome"]
+        sales_scope = pd10[
+            pd10["Mes"].isin(months) & pd10["Contrato"].isin(CONTRACT_ORDER)
+        ]
+        wallet_scope = carteira_ano[
+            carteira_ano["Mes"].isin(months)
+            & carteira_ano["Contrato"].isin(CONTRACT_ORDER)
+        ]
+        sales_clients = (
+            sales_scope.groupby(client_keys, dropna=False)["ROBValor"]
+            .sum().rename("realizado").reset_index()
+        )
+        wallet_clients = (
+            wallet_scope.groupby(client_keys, dropna=False)["CarteiraValor"]
+            .sum().rename("carteira").reset_index()
+        )
+        grouped = sales_clients.merge(wallet_clients, how="outer", on=client_keys)
+        grouped[["realizado", "carteira"]] = grouped[
+            ["realizado", "carteira"]
+        ].fillna(0)
         return [{
             "regiao": row.Regiao, "clienteId": int(row.ClienteId),
             "cliente": row.ClienteNome, "realizado": money(row.realizado),
@@ -496,26 +601,34 @@ def main() -> None:
     for record in current_period["registros"]:
         record["metaAteCorte"] = money(record["meta"] * target_ratio)
 
-    daily_dates = pd.date_range(month_start, cutoff, freq="D")
-    daily_source = (
+    # A linha de vendas para no corte; a linha de carteira segue até o fim do
+    # mês para mostrar as entregas ainda programadas.
+    daily_dates = pd.date_range(month_start, month_end, freq="D")
+    daily_sales = (
         pd10[pd10["Mes"] == current_month]
         .groupby("Data")
-        .agg(realizado=("ROBValor", "sum"), carteira=("CarteiraValor", "sum"))
+        .agg(realizado=("ROBValor", "sum"))
+    )
+    daily_wallet_source = (
+        carteira_ano[carteira_ano["Mes"] == current_month]
+        .groupby("DataEntrega")
+        .agg(carteira=("CarteiraValor", "sum"))
     )
     real_acc = 0.0
     wallet_acc = 0.0
     daily_wallet = []
     for date in daily_dates:
-        if date in daily_source.index:
-            real_acc += float(daily_source.loc[date, "realizado"])
-            wallet_acc += float(daily_source.loc[date, "carteira"])
+        if date in daily_sales.index:
+            real_acc += float(daily_sales.loc[date, "realizado"])
+        if date in daily_wallet_source.index:
+            wallet_acc += float(daily_wallet_source.loc[date, "carteira"])
         daily_wallet.append({
             "data": date.strftime("%Y-%m-%d"),
             "realizado": money(real_acc),
             "carteira": money(wallet_acc),
         })
 
-    daily_detail = (
+    daily_sales_detail = (
         pd10[
             (pd10["Mes"] == current_month)
             & pd10["Contrato"].isin(CONTRACT_ORDER)
@@ -524,12 +637,30 @@ def main() -> None:
             ["Data", "Regiao", "RepId", "Contrato"],
             dropna=False,
         )
-        .agg(
-            realizado=("ROBValor", "sum"),
-            carteira=("CarteiraValor", "sum"),
-        )
+        .agg(realizado=("ROBValor", "sum"))
         .reset_index()
     )
+    daily_wallet_detail = (
+        carteira_ano[
+            (carteira_ano["Mes"] == current_month)
+            & carteira_ano["Contrato"].isin(CONTRACT_ORDER)
+        ]
+        .groupby(
+            ["DataEntrega", "Regiao", "RepId", "Contrato"],
+            dropna=False,
+        )
+        .agg(carteira=("CarteiraValor", "sum"))
+        .reset_index()
+        .rename(columns={"DataEntrega": "Data"})
+    )
+    daily_detail = daily_sales_detail.merge(
+        daily_wallet_detail,
+        how="outer",
+        on=["Data", "Regiao", "RepId", "Contrato"],
+    )
+    daily_detail[["realizado", "carteira"]] = daily_detail[
+        ["realizado", "carteira"]
+    ].fillna(0)
     daily_records = [
         {
             "data": row.Data.strftime("%Y-%m-%d"),
@@ -615,16 +746,16 @@ def main() -> None:
 
     history_quality = history_payload.get("qualidade", {}) if history_payload else {}
     history_total = float(history_quality.get("totalGeral", 0))
-    history_wallet = float(history_quality.get("carteira", 0))
     total_general = money(history_total + pd10["ROBValor"].sum())
-    total_wallet = money(history_wallet + pd10["CarteiraValor"].sum())
+    total_wallet = money(carteira_ano["CarteiraValor"].sum())
     model_total = money(model["Realizado"].sum())
     model_wallet = money(model["Carteira"].sum())
     checks = {
         "coberturaCompleta": not missing_months,
         "totalGeralConciliado": abs(total_general - model_total) < 0.02,
         "carteiraConciliada": abs(total_wallet - model_wallet) < 0.02,
-        "carteiraDentroTotal": total_wallet <= total_general + 0.01,
+        "carteiraNaoNegativa": bool((carteira_ano["CarteiraValor"] >= 0).all()),
+        "carteiraSomenteAberta": not unexpected_wallet_statuses,
         "metasPresentes": float(model["Meta"].sum()) > 0,
         "faturamentoPresente": eft_gross > 0,
         "faturamentoDentroBruto": eft_commercial <= eft_gross + 0.01,
@@ -647,6 +778,7 @@ def main() -> None:
     for key, value in current_status_totals.items():
         status_totals[key] = status_totals.get(key, 0) + float(value)
     source_rep_ids = {int(value) for value in pd10["RepId"].dropna().unique()}
+    source_rep_ids.update(int(value) for value in carteira_ano["RepId"].dropna().unique())
     source_rep_ids.update(int(value) for value in history_quality.get("representantesForaINDEX", []))
     outside_index = sorted(
         value for value in source_rep_ids
@@ -683,6 +815,7 @@ def main() -> None:
             "mesesHistorico": history_months,
             "mesesFonteMensal": source_months,
             "linhasPD010": int(len(pd10)),
+            "linhasCarteira": int(len(carteira_ano)),
             "linhasHistoricoOrigem": int(history_quality.get("linhasPD010", 0)),
             "linhasPD019": int(len(pd19)),
             "linhasEFT018": int(len(eft)),
@@ -692,7 +825,7 @@ def main() -> None:
             "gruposFaturamentoOutros": eft_other_groups,
             "totalGeral": total_general,
             "carteira": total_wallet,
-            "semCarteira": money(total_general - total_wallet),
+            "carteiraFormula": "ROB / Qtde Pedida × (Qtde Pedida - Qtde Faturada)",
             "totaisPorSituacao": {
                 key: money(value) for key, value in status_totals.items()
             },
@@ -700,7 +833,8 @@ def main() -> None:
         },
         "fontes": [
             "dados-historicos.json — meses encerrados",
-            "ETLdados/WWWPD010.xlsx — mês atual, total geral e carteira",
+            "ETLdados/WWWPD010.xlsx — vendas captadas no mês atual",
+            "ETLdados/WWWPD010_CARTEIRA.xlsx — carteira aberta por data de entrega e saldo de quantidade",
             "ETLdados/WWWPD019.xlsx — metas comerciais",
             f"Metas comerciais {meta_mode}",
             "ETLdados/WWEFT018.LST — faturamento bruto; grupos não comerciais mantidos no KPI e ocultos no desempenho por contrato",
