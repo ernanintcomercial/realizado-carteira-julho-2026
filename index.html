@@ -13,7 +13,7 @@
     .header-right{display:flex;gap:12px;align-items:center;text-align:right}.stamp{font-size:12px;color:var(--muted)}
     .btn,.control{border:1px solid var(--line);background:var(--control);color:var(--ink);border-radius:9px;padding:9px 12px}.btn{cursor:pointer}.btn:hover{border-color:var(--blue)}
     .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:14px;box-shadow:var(--shadow)}
-    .field{display:grid;gap:4px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.field select{min-width:180px}.rep-picker{position:relative}.rep-menu{display:none;position:absolute;z-index:10;top:100%;left:0;right:0;max-height:260px;overflow:auto;margin-top:4px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow)}.rep-picker:focus-within .rep-menu,.rep-menu:hover{display:block}.rep-option{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer}.rep-option:hover{background:var(--bg)}.rep-option input{accent-color:var(--blue)}
+    .field{display:grid;gap:4px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.field select{min-width:180px}.rep-picker{position:relative}.rep-menu{display:none;position:absolute;z-index:10;top:100%;left:0;right:0;max-height:260px;overflow:auto;margin-top:4px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow)}.rep-picker:focus-within .rep-menu,.rep-menu:hover{display:block}.rep-option{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer}.rep-option:hover{background:var(--bg)}.rep-option input{accent-color:var(--blue)}.rep-option.selected{position:relative;background:var(--blue2);font-weight:700}.rep-option.selected-last{margin-bottom:6px;border-bottom:1px solid var(--line);border-radius:6px 6px 0 0;padding-bottom:12px}
     .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}.tab{border:0;background:transparent;color:var(--muted);padding:10px 15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600}.tab.active{color:var(--blue);border-color:var(--blue)}
     .view{display:none}.view.active{display:block}.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
     .kpi{padding:17px}.kpi label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.kpi strong{display:block;font-size:22px;margin:7px 0 3px}.kpi small{color:var(--muted)}
@@ -209,17 +209,21 @@ function metaUntilCutoff(){
 function updateRepOptions(){
   const region=$('regionSelect').value,old=selectedRepIds();
   const base=adjustedPeriodRows(period);
-  repChoices=aggregate(base.filter(r=>!region||r.regiao===region),['repId','representante'])
-    .sort((a,b)=>a.representante.localeCompare(b.representante,'pt-BR'));
-  const valid=old.filter(id=>repChoices.some(r=>String(r.repId)===id));$('repSelect').value=valid.join(',');
-  $('repMenu').innerHTML=repChoices.map(r=>{const id=String(r.repId);return `<label class="rep-option"><input type="checkbox" value="${id}" ${valid.includes(id)?'checked':''} onchange="toggleRepresentative('${id}')"><span>${r.representante} · ${id}</span></label>`}).join('');
+  const available=aggregate(base.filter(r=>!region||r.regiao===region),['repId','representante']);
+  const valid=old.filter(id=>available.some(r=>String(r.repId)===id));$('repSelect').value=valid.join(',');
+  repChoices=available.sort((a,b)=>{
+    const selectedOrder=Number(!valid.includes(String(a.repId)))-Number(!valid.includes(String(b.repId)));
+    return selectedOrder||a.representante.localeCompare(b.representante,'pt-BR');
+  });
+  const lastSelectedIndex=repChoices.findLastIndex(r=>valid.includes(String(r.repId)));
+  $('repMenu').innerHTML=repChoices.map((r,index)=>{const id=String(r.repId),selected=valid.includes(id);return `<label class="rep-option${selected?' selected':''}${selected&&index===lastSelectedIndex?' selected-last':''}"><input type="checkbox" value="${id}" ${selected?'checked':''} onchange="toggleRepresentative('${id}')"><span>${r.representante} · ${id}</span></label>`}).join('');
   const selected=repChoices.filter(r=>valid.includes(String(r.repId)));$('repSearch').value=selected.length?selected.map(r=>r.representante).join(', '):'';
 }
 function searchRepresentative(){
   const query=$('repSearch').value.trim().toLocaleLowerCase('pt-BR');
   document.querySelectorAll('.rep-option').forEach(el=>el.style.display=!query||el.textContent.toLocaleLowerCase('pt-BR').includes(query)?'flex':'none');
 }
-function toggleRepresentative(repId){const ids=selectedRepIds(),id=String(repId),next=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];$('repSelect').value=next.join(',');const chosen=repChoices.filter(r=>next.includes(String(r.repId)));$('repSearch').value=chosen.map(r=>r.representante).join(', ');render()}
+function toggleRepresentative(repId){const ids=selectedRepIds(),id=String(repId),next=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];$('repSelect').value=next.join(',');updateRepOptions();render()}
 function render(){
   rows=filteredRows();const meta=sum(rows,'meta'),cutMeta=metaUntilCutoff(),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta),cutPct=percent(real,cutMeta);
   const totalWallet=sum(data.periodos.filter(x=>/^M\d{2}$/.test(x.id)).flatMap(x=>x.registros||[]).filter(matchesFilters),'carteira');
@@ -400,7 +404,7 @@ $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepres
   $('clearBtn').onclick=()=>{period=currentMonthPeriod();$('periodSelect').value=period.id;$('regionSelect').value=data.ordemRegioes.length===1?data.ordemRegioes[0]:'';$('contractSelect').value='';$('repSelect').value='';$('repSearch').value='';updateRepOptions();render()};
   $('printBtn').onclick=printResults;
 
-fetch('dados-gerenciais.json?v=45').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
+fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');period=currentMonthPeriod();$('periodSelect').value=period.id;
   const regiaoRestrita=data.ordemRegioes.length===1;
   $('printBtn').hidden=regiaoRestrita;
