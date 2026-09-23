@@ -370,7 +370,7 @@ function normalizedText(value){return String(value||'').normalize('NFKD').replac
 function printMoney(value){return (+value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0})}
 function escapePrint(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function printResults(){
-  if(!data||data.ordemRegioes.length!==3)return;
+  if(!data)return;
   const base=adjustedPeriodRows(period),contracts=['ALUMINIO','PLASTICO','LED','EX'];
   const labels={'SUL E CENTRO OESTE':'Sul e Centro-Oeste','SUDESTE':'Sudeste','NORTE E NORDESTE':'Norte e Nordeste','INTERNO':'Interno'};
   const groups=['SUL E CENTRO OESTE','SUDESTE','NORTE E NORDESTE','INTERNO'];
