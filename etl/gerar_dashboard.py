@@ -16,7 +16,14 @@ CONTRACTS = {
     "EX": "EX",
 }
 CONTRACT_ORDER = ["ALUMÍNIO", "PLÁSTICO", "LED", "EX"]
-REGION_ORDER = ["SUL E CENTRO OESTE", "SUDESTE", "NORTE E NORDESTE"]
+EXPORT_REGION = "EXPORTAÇÃO"
+EXPORT_REP_IDS = {7074}
+REGION_ORDER = [
+    "SUL E CENTRO OESTE",
+    "SUDESTE",
+    "NORTE E NORDESTE",
+    EXPORT_REGION,
+]
 EFT_GROUP_CONTRACT = {
     1: "ALUMÍNIO", 5: "ALUMÍNIO", 8: "ALUMÍNIO", 51: "ALUMÍNIO", 74: "ALUMÍNIO",
     12: "PLÁSTICO", 13: "PLÁSTICO", 16: "PLÁSTICO", 18: "PLÁSTICO",
@@ -106,6 +113,8 @@ def contract_name(value: object) -> str:
 
 def region_name(value: object) -> str | None:
     text = " ".join(norm(value).split())
+    if "EXPORT" in text:
+        return EXPORT_REGION
     if "SUDESTE" in text:
         return "SUDESTE"
     if "NORTE" in text:
@@ -289,11 +298,13 @@ def main() -> None:
         .sort_values(["RepId", "ROBValor"], ascending=[True, False])
         .drop_duplicates("RepId")
         .set_index("RepId")["UFNome"]
-        .map(lambda uf: UF_REGION.get(uf, "NORTE E NORDESTE"))
+        .map(lambda uf: EXPORT_REGION if uf == "EX" else UF_REGION.get(uf, "NORTE E NORDESTE"))
         .to_dict()
     )
     def sales_region(row):
         rep_id = int(row["RepId"])
+        if rep_id in EXPORT_REP_IDS or row["UFNome"] == "EX":
+            return EXPORT_REGION
         if rep_id in index_region:
             return index_region[rep_id]
 
@@ -395,10 +406,11 @@ def main() -> None:
         if not period:
             continue
         for record in period.get("registros", []):
+            rep_id = int(record["repId"])
             previous_meta_rows.append({
                 "Mes": month,
-                "Regiao": record["regiao"],
-                "RepId": int(record["repId"]),
+                "Regiao": EXPORT_REGION if rep_id in EXPORT_REP_IDS else record["regiao"],
+                "RepId": rep_id,
                 "RepNome": str(record["representante"]),
                 "Contrato": record["contrato"],
                 "Meta": float(record.get("meta", 0)),
@@ -455,7 +467,11 @@ def main() -> None:
         history_actual = pd.DataFrame([
             {
                 "Mes": int(record["Mes"]),
-                "Regiao": record["regiao"],
+                "Regiao": (
+                    EXPORT_REGION
+                    if int(record["repId"]) in EXPORT_REP_IDS
+                    else record["regiao"]
+                ),
                 "RepId": int(record["repId"]),
                 "Contrato": record["contrato"],
                 "Realizado": float(record.get("realizado", 0)),
@@ -689,11 +705,16 @@ def main() -> None:
     eft["RepId"] = pd.to_numeric(eft[eft_rep_col], errors="coerce").fillna(0).astype(int)
     eft["Grupo"] = pd.to_numeric(eft[eft_group_col], errors="coerce").fillna(0).astype(int)
     eft["Contrato"] = eft["Grupo"].map(EFT_GROUP_CONTRACT).fillna("OUTROS")
-    eft["Regiao"] = eft[eft_uf_col].map(
-        lambda value: UF_REGION.get(
-            UF_CODE_TO_NAME.get(norm(value), norm(value)),
-            "NORTE E NORDESTE",
-        )
+    eft["UFNome"] = eft[eft_uf_col].map(
+        lambda value: UF_CODE_TO_NAME.get(norm(value), norm(value))
+    )
+    eft["Regiao"] = eft.apply(
+        lambda row: (
+            EXPORT_REGION
+            if int(row["RepId"]) in EXPORT_REP_IDS or row["UFNome"] == "EX"
+            else UF_REGION.get(row["UFNome"], "NORTE E NORDESTE")
+        ),
+        axis=1,
     )
     eft["Faturado"] = pd.to_numeric(
         eft[eft_rob_col].astype(str)
@@ -716,10 +737,14 @@ def main() -> None:
         eft.groupby(["Mes", "Regiao", "RepId", "Contrato"], dropna=False)["Faturado"]
         .sum().reset_index()
     )
-    previous_billing = [
-        record for record in previous_payload.get("faturamentoRegistros", [])
-        if int(record.get("mes", 0)) not in eft_months
-    ]
+    previous_billing = []
+    for record in previous_payload.get("faturamentoRegistros", []):
+        if int(record.get("mes", 0)) in eft_months:
+            continue
+        preserved = dict(record)
+        if int(preserved.get("repId", 0)) in EXPORT_REP_IDS:
+            preserved["regiao"] = EXPORT_REGION
+        previous_billing.append(preserved)
     if not previous_billing and eft_months != required_months:
         raise SystemExit(
             "BLOQUEADO: WWEFT018 mensal sem histórico de faturamento preservado. "
@@ -759,6 +784,10 @@ def main() -> None:
         "metasPresentes": float(model["Meta"].sum()) > 0,
         "faturamentoPresente": eft_gross > 0,
         "faturamentoDentroBruto": eft_commercial <= eft_gross + 0.01,
+        "exportacaoSeparadaDasRegionais": bool(
+            (model.loc[model["RepId"].isin(EXPORT_REP_IDS), "Regiao"] == EXPORT_REGION).all()
+            and (eft.loc[eft["RepId"].isin(EXPORT_REP_IDS), "Regiao"] == EXPORT_REGION).all()
+        ),
     }
     failed_checks = [name for name, passed in checks.items() if not passed]
     if failed_checks:
