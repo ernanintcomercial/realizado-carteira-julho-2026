@@ -431,8 +431,10 @@ $('repSearch').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchRepres
 fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenciais.json não encontrado');return r.json()}).then(payload=>{
   data=payload;$('periodSelect').innerHTML=data.periodos.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');period=currentMonthPeriod();$('periodSelect').value=period.id;
   const regiaoRestrita=data.ordemRegioes.length===1;
+  const acessoRepresentante=data.acesso?.tipo==='representante';
   $('printBtn').hidden=regiaoRestrita;
   $('nneSummaryBtn').hidden=!data.ordemRegioes.includes('NORTE E NORDESTE');
+  if(acessoRepresentante){const abcTab=document.querySelector('[data-view="abc"]');if(abcTab)abcTab.hidden=true;$('abc').hidden=true}
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
