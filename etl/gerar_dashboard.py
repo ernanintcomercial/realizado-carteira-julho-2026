@@ -160,6 +160,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--holidays", type=Path)
     parser.add_argument("--as-of", help="Data de execução YYYY-MM-DD.")
     parser.add_argument("--sales-cutoff", help="Corte excepcional de vendas YYYY-MM-DD; demais fontes mantêm o corte diário.")
+    parser.add_argument("--billing-cutoff", help="Corte excepcional de faturamento YYYY-MM-DD.")
     parser.add_argument(
         "--allow-monthly",
         action="store_true",
@@ -184,6 +185,9 @@ def main() -> None:
     today = pd.Timestamp(args.as_of).normalize() if args.as_of else pd.Timestamp.now().normalize()
     cutoff = (today - pd.Timedelta(days=1)).normalize()
     daily_cutoff = cutoff
+    billing_cutoff = pd.Timestamp(args.billing_cutoff).normalize() if args.billing_cutoff else daily_cutoff
+    if billing_cutoff > today or billing_cutoff.year != daily_cutoff.year or billing_cutoff.month != daily_cutoff.month:
+        raise SystemExit("ERRO: corte de faturamento deve pertencer ao mês corrente e não pode ser futuro.")
     if args.sales_cutoff:
         cutoff = pd.Timestamp(args.sales_cutoff).normalize()
         if cutoff > today or cutoff.year != daily_cutoff.year or cutoff.month != daily_cutoff.month:
@@ -728,7 +732,11 @@ def main() -> None:
         .str.replace(",", ".", regex=False),
         errors="coerce",
     ).fillna(0)
-    eft = eft[(eft["Data"].dt.year == year) & (eft["Data"] <= daily_cutoff)].copy()
+    eft = eft[(eft["Data"].dt.year == year) & (eft["Data"] <= billing_cutoff)].copy()
+    if args.billing_cutoff:
+        # A atualização intradia substitui apenas o mês em fechamento.
+        # O histórico publicado dos outros meses é preservado abaixo.
+        eft = eft[eft["Data"].dt.month == current_month].copy()
     if eft.empty:
         raise SystemExit("ERRO: WWEFT018 ficou vazio após aplicar ano e corte.")
     eft["Mes"] = eft["Data"].dt.month.astype(int)
@@ -826,7 +834,7 @@ def main() -> None:
         "cortes": {
             "realizado": cutoff.strftime("%d/%m/%Y"),
             "carteira": daily_cutoff.strftime("%d/%m/%Y"),
-            "faturamento": daily_cutoff.strftime("%d/%m/%Y"),
+            "faturamento": billing_cutoff.strftime("%d/%m/%Y"),
             "metas": f"ano de {year}",
         },
         "metaDiaria": {
@@ -881,6 +889,8 @@ def main() -> None:
         extracted = pd.Timestamp.fromtimestamp(args.pd010.stat().st_mtime)
         payload["cortes"]["vendasParcial"] = f"parcial — arquivo de {extracted.strftime('%d/%m/%Y %H:%M')}"
         payload["fontes"][1] = f"{args.pd010.name} — vendas captadas; corte excepcional incluindo o dia {cutoff.strftime('%d/%m/%Y')}"
+    if args.billing_cutoff:
+        payload["fontes"][5] = f"{args.eft018.name} — faturamento atualizado incluindo {billing_cutoff.strftime('%d/%m/%Y')}"
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temp_output = args.output.with_suffix(args.output.suffix + ".tmp")
