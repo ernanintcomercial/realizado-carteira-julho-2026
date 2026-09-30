@@ -438,7 +438,7 @@ fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenci
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
-  $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b><br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
+  $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b>${data.cortes.vendasParcial?'<br>'+escapePrint(data.cortes.vendasParcial):''}<br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
   updateRepOptions();render();$('loading').style.display='none';
 }).catch(e=>{$('loading').textContent='Erro: '+e.message});
 </script>
