@@ -880,7 +880,7 @@ def main() -> None:
             "ETLdados/WWWPD010_CARTEIRA.xlsx — carteira aberta por data de entrega e saldo de quantidade",
             "ETLdados/WWWPD019.xlsx — metas comerciais",
             f"Metas comerciais {meta_mode}",
-            "ETLdados/WWEFT018.LST — faturamento bruto; grupos não comerciais mantidos no KPI e ocultos no desempenho por contrato",
+            f"{('ETLdados/WWEFT018inicio.LST + ETLdados/WWEFT018fim.LST') if args.eft018.name == 'WWEFT018consolidado.LST' else 'ETLdados/' + args.eft018.name} — faturamento bruto; grupos não comerciais mantidos no KPI e ocultos no desempenho por contrato",
             "ETLdados/INDEX.xlsx — regiões e representantes",
         ],
     }
