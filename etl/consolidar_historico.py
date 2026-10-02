@@ -53,11 +53,13 @@ def assert_month_consistent(payload: dict[str, object], month: int) -> None:
     records = period.get("registros", [])
     realized = round(sum(float(row.get("realizado", 0)) for row in records), 2)
     wallet = round(sum(float(row.get("carteira", 0)) for row in records), 2)
-    if realized != round(float(monthly.get("realizado", 0)), 2):
+    # Mesma tolerância de dois centavos usada na conciliação do ETL:
+    # somar registros já arredondados pode diferir do total arredondado.
+    if abs(realized - round(float(monthly.get("realizado", 0)), 2)) >= 0.02:
         raise SystemExit(
             f"BLOQUEADO: realizado de M{month:02} diverge entre resumo e registros."
         )
-    if wallet != round(float(monthly.get("carteira", 0)), 2):
+    if abs(wallet - round(float(monthly.get("carteira", 0)), 2)) >= 0.02:
         raise SystemExit(
             f"BLOQUEADO: carteira de M{month:02} diverge entre resumo e registros."
         )
