@@ -37,6 +37,16 @@ class ConsolidationTests(unittest.TestCase):
             consolidate(self.directory, self.output, 2026)
         self.assertFalse(self.output.exists())
 
+    def test_totvs_trailing_header_separator(self):
+        self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'inicio']],
+                   ['Data Emissão', 'ROB', 'Descrição', ''])
+        self.write('WWEFT018fim.LST', [['01/06/26', '20', 'fim', '']],
+                   ['Data Emissão', 'ROB', 'Descrição', ''])
+        path, _ = consolidate(self.directory, self.output, 2026)
+        with path.open(encoding='latin1', newline='') as stream:
+            rows = list(csv.reader(stream, delimiter='|'))
+        self.assertTrue(all(len(row) == 3 for row in rows))
+
     def test_partial_pair_rejected_even_with_legacy(self):
         self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'inicio']])
         self.write('WWEFT018.LST', [['30/09/26', '20', 'antigo']])

@@ -34,6 +34,9 @@ def consolidate(directory, output, year):
                     current_header = next(reader, None)
                     if not current_header:
                         raise ValueError(f'{source.name}: arquivo vazio.')
+                    # TOTVS termina o cabeçalho com |, mas não as linhas de dados.
+                    while current_header and not current_header[-1].strip():
+                        current_header.pop()
                     if header is None:
                         header = current_header
                         writer.writerow(header)
@@ -46,6 +49,8 @@ def consolidate(directory, output, year):
                     for row in reader:
                         if not row or not any(cell.strip() for cell in row):
                             continue
+                        while len(row) > len(header) and not row[-1].strip():
+                            row.pop()
                         if len(row) != len(header):
                             raise ValueError(f'{source.name}, linha {reader.line_num}: colunas inválidas.')
                         try:
