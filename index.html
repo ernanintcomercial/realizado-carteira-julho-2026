@@ -108,7 +108,6 @@
   <section class="view" id="abc">
     <article class="card panel"><div class="panel-head"><div><h2>Clientes por classe ABC</h2><div class="muted" id="abcNote">A até 80% · B até 95% · C restante · dados de agosto</div></div><span class="muted" id="abcSummary"></span></div><div class="abc-blocks" id="abcBlocks"></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total geral</th><th>Carteira</th><th>Acumulado</th><th>Classe</th></tr></thead><tbody id="abcRows"></tbody></table></div></article>
   </section>
-  <footer id="footer"></footer>
 </main>
 <script>
 const $=id=>document.getElementById(id), money=v=>(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
@@ -243,7 +242,7 @@ function render(){
   renderRegions();renderInsights(meta,real,wallet);renderRanking();renderContracts();renderDetails();renderABC();drawMonthly();drawDaily();
 }
 function renderRegions(){
-  const regionAgg=aggregate(rows,['regiao']).sort((a,b)=>data.ordemRegioes.indexOf(a.regiao)-data.ordemRegioes.indexOf(b.regiao));
+  const regionAgg=aggregate(rows,['regiao']).filter(r=>r.regiao!=='EXPORTAÇÃO').sort((a,b)=>data.ordemRegioes.indexOf(a.regiao)-data.ordemRegioes.indexOf(b.regiao));
   $('regionCards').innerHTML=regionAgg.map(r=>{const p=percent(r.realizado,r.meta),totalWidth=Math.min(100,p);return `<article class="card region"><h3>${r.regiao}</h3><div class="metric"><span>Meta</span><b>${money(r.meta)}</b></div><div class="metric"><span>Vendas captadas</span><b>${money(r.realizado)}</b></div><div class="metric"><span>Carteira programada</span><b>${money(r.carteira)}</b></div><div class="progress" role="img" aria-label="${r.regiao}: vendas em ${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}% da meta; carteira programada ${money(r.carteira)}"><span class="progress-net" style="width:${totalWidth}%"></span></div><div class="metric"><span>Atingimento</span><b>${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b></div></article>`}).join('');
 }
 function renderInsights(meta,real,wallet){
@@ -438,7 +437,7 @@ fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenci
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
-  $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b>${data.cortes.vendasParcial?'<br>'+escapePrint(data.cortes.vendasParcial):''}<br>Carteira em <b>${data.cortes.carteira}</b>`;$('footer').textContent='Fontes: '+data.fontes.join(' · ')+' · Gerado em '+data.geradoEm;
+  $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b>${data.cortes.vendasParcial?'<br>'+escapePrint(data.cortes.vendasParcial):''}<br>Carteira em <b>${data.cortes.carteira}</b>`;
   updateRepOptions();render();$('loading').style.display='none';
 }).catch(e=>{$('loading').textContent='Erro: '+e.message});
 </script>
