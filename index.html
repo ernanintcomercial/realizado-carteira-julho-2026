@@ -71,7 +71,7 @@
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
       <article class="card kpi focus"><label>Meta até o corte</label><strong id="kCutMeta">—</strong><small id="kCutMetaNote">referência operacional diária</small></article>
       <article class="card kpi"><label>Total geral</label><strong class="blue" id="kReal">—</strong><small id="kRealNote"></small></article>
-      <article class="card kpi"><label>Carteira em aberto</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small><div class="kpi-sub"><span>Carteira total</span><b id="kWalletTotal">—</b></div></article>
+      <article class="card kpi"><label>Carteira Aberto Mês</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small><div class="kpi-sub" title="Valor fixo informado manualmente; não varia com os filtros e não compõe os cálculos."><span>Carteira Programada</span><b id="kWalletScheduled">R$ 1.070.000</b></div><div class="kpi-sub"><span>Carteira total</span><b id="kWalletTotal">—</b></div></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
     <section class="card pace" aria-label="Régua de progresso do período">
@@ -86,7 +86,7 @@
       <div class="pace-reading" id="paceReading"></div>
     </section>
     <div class="grid main-grid">
-      <article class="card panel"><div class="panel-head"><h2>Meta, vendas e carteira por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Vendas captadas</span><span><i class="dot" style="background:var(--amber)"></i>Carteira programada</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
+      <article class="card panel"><div class="panel-head"><h2>Meta, vendas e carteira por mês</h2><div class="legend"><span><i class="dot" style="background:var(--blue2)"></i>Meta</span><span><i class="dot" style="background:var(--blue)"></i>Vendas captadas</span><span><i class="dot" style="background:var(--amber)"></i>Carteira</span></div></div><div class="chart-shell" id="monthlyShell"><svg id="monthlyChart" viewBox="0 0 900 310"></svg><div class="chart-tooltip" id="monthlyTooltip"></div></div></article>
       <article class="card panel"><div class="panel-head"><h2>Leitura gerencial</h2></div><div class="insights" id="insights"></div></article>
     </div>
     <div class="grid regions" id="regionCards"></div>
@@ -253,7 +253,7 @@ function renderInsights(meta,real,wallet){
     {c:gap<=0?'':'bad',t:gap<=0?`Total geral supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} para atingir a meta.`},
     {c:'',t:repAtual?`${repAtual.representante} representa ${percent(repAtual.realizado,contextoReal).toFixed(1)}% do Total Geral do contexto selecionado e está em ${percent(repAtual.realizado,repAtual.meta).toFixed(0)}% de atingimento.`:repSelecionado.length>1?`${repSelecionado.length} representantes selecionados representam ${percent(real,contextoReal).toFixed(1)}% do Total Geral do contexto.`:(best?`${best.representante} lidera atingimento: ${percent(best.realizado,best.meta).toFixed(0)}%.`:'Sem meta para ranking.')},
     {c:'warn',t:repAtual?`O representante selecionado concentra ${percent(repAtual.realizado,regionalReal).toFixed(1)}% do realizado da região.`:(weak?((regionalRestrita||regiaoSelecionada)?`Região selecionada está em ${percent(weak.realizado,weak.meta).toFixed(0)}% de atingimento.`:`${weak.regiao} possui menor atingimento: ${percent(weak.realizado,weak.meta).toFixed(0)}%.`):'Sem região selecionada.')},
-    {c:'',t:`Carteira programada cobre ${percent(wallet,meta).toFixed(1)}% da meta do período.`}
+    {c:'',t:`Carteira cobre ${percent(wallet,meta).toFixed(1)}% da meta do período.`}
   ];$('insights').innerHTML=items.map(x=>`<div class="insight ${x.c}">${x.t}</div>`).join('');
 }
 function renderRanking(){
@@ -343,7 +343,7 @@ function monthlyHover(event){
   const svg=$('monthlyChart'),cfg=svg._hover,tip=$('monthlyTooltip'),svgX=svgPointerX(event,svg);
   const i=Math.max(0,Math.min(11,Math.floor((svgX-cfg.p.l)/cfg.bw))),r=cfg.series[i],cx=cfg.p.l+i*cfg.bw+cfg.bw/2;
   $('monthlyHover').innerHTML=`<rect class="hover-band" x="${cfg.p.l+i*cfg.bw}" y="${cfg.p.t}" width="${cfg.bw}" height="${cfg.H-cfg.p.t-cfg.p.b}" rx="4"/><line class="hover-guide" x1="${cx}" y1="${cfg.p.t}" x2="${cx}" y2="${cfg.H-cfg.p.b}"/>`;
-  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Vendas captadas</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira programada</span><b>${money(r.carteira)}</b></div>`;
+  tip.innerHTML=`<strong>${r.nome} de 2026</strong><div class="tip-row"><span>Meta</span><b>${money(r.meta)}</b></div><div class="tip-row"><span>Vendas captadas</span><b>${money(r.realizado)}</b></div><div class="tip-row"><span>Carteira</span><b>${money(r.carteira)}</b></div>`;
   tooltipPosition(event,svg,tip,$('monthlyShell'));
 }
 function dailyHover(event){
