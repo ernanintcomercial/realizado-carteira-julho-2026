@@ -18,6 +18,11 @@ CONTRACTS = {
 CONTRACT_ORDER = ["ALUMÍNIO", "PLÁSTICO", "LED", "EX"]
 EXPORT_REGION = "EXPORTAÇÃO"
 EXPORT_REP_IDS = {7074}
+# Cotação provisória autorizada em 14/10/2026 para este pedido da METALLI.
+# Outros pedidos de exportação não herdam a taxa automaticamente.
+WALLET_FX_CLIENT = 22540
+WALLET_FX_ORDER = "EXP-005-26"
+WALLET_FX_RATE = 5.2232
 REGION_ORDER = [
     "SUL E CENTRO OESTE",
     "SUDESTE",
@@ -96,6 +101,12 @@ def find_column(frame: pd.DataFrame, *names: str) -> str:
 
 def money(value: object) -> float:
     return round(float(value or 0), 2)
+
+
+def wallet_exchange_rate(client: object, order: object) -> float:
+    if pd.to_numeric(client, errors="coerce") == WALLET_FX_CLIENT and norm(order) == WALLET_FX_ORDER:
+        return WALLET_FX_RATE
+    return 1.0
 
 
 def contract_name(value: object) -> str:
@@ -397,6 +408,12 @@ def main() -> None:
         lambda x: UF_CODE_TO_NAME.get(norm(x), norm(x))
     )
     carteira["Regiao"] = carteira.apply(sales_region, axis=1)
+    wallet_order_col = find_column(carteira, "Nr Pedido")
+    carteira["CotacaoCarteira"] = [
+        wallet_exchange_rate(client, order)
+        for client, order in zip(carteira["ClienteId"], carteira[wallet_order_col])
+    ]
+    carteira["CarteiraValor"] *= carteira["CotacaoCarteira"]
     carteira_ano = carteira[carteira["AnoEntrega"] == year].copy()
     if carteira_ano.empty:
         raise SystemExit(
@@ -869,6 +886,12 @@ def main() -> None:
             "totalGeral": total_general,
             "carteira": total_wallet,
             "carteiraFormula": "ROB / Qtde Pedida × (Qtde Pedida - Qtde Faturada)",
+            "carteiraCotacaoProvisoria": {
+                "cliente": WALLET_FX_CLIENT,
+                "pedido": WALLET_FX_ORDER,
+                "cotacao": WALLET_FX_RATE,
+                "linhasConvertidas": int((carteira_ano["CotacaoCarteira"] != 1).sum()),
+            },
             "totaisPorSituacao": {
                 key: money(value) for key, value in status_totals.items()
             },
