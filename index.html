@@ -62,7 +62,7 @@
     <button class="tab" data-view="performance">Desempenho</button>
     <button class="tab" data-view="wallet">Carteira diária</button>
     <button class="tab" data-view="details">Detalhamento</button>
-    <button class="tab" data-view="abc">Curva ABC</button>
+    <button class="tab" data-view="abc" hidden>Curva ABC</button>
   </nav>
 
   <div id="loading" class="card loading">Preparando painel gerencial…</div>
@@ -107,7 +107,7 @@
   <section class="view" id="details">
     <article class="card panel"><div class="panel-head"><h2>Detalhamento comercial</h2><span class="muted" id="detailCount"></span></div><div class="table-wrap"><table><thead><tr><th>Região / representante</th><th>Contrato</th><th>Meta</th><th>Total geral</th><th>Carteira</th><th>Carteira / meta</th><th>Ating.</th></tr></thead><tbody id="detailRows"></tbody></table></div></article>
   </section>
-  <section class="view" id="abc">
+  <section class="view" id="abc" hidden>
     <article class="card panel"><div class="panel-head"><div><h2>Clientes por classe ABC</h2><div class="muted" id="abcNote">A até 80% · B até 95% · C restante · dados de agosto</div></div><span class="muted" id="abcSummary"></span></div><div class="abc-blocks" id="abcBlocks"></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total geral</th><th>Carteira</th><th>Acumulado</th><th>Classe</th></tr></thead><tbody id="abcRows"></tbody></table></div></article>
   </section>
 </main>
