@@ -126,7 +126,7 @@ const contractKey=value=>{const t=String(value||'').normalize('NFKD').replace(/[
  let data,period,rows=[],repChoices=[],abcClassFilter='';
 const selectedRepIds=()=>($('repSelect').value||'').split(',').map(x=>x.trim()).filter(Boolean);
 // Identificações ocultas nas listas por solicitação comercial; preservar o movimento histórico.
-const INACTIVE_REP_IDS=new Set(['9913','9961','9897','9955','90007']);
+const INACTIVE_REP_IDS=new Set(['9913','9961','9897','9955','90007','9965']);
 const visibleRepresentative=row=>!INACTIVE_REP_IDS.has(String(row.repId));
 const PRINT_REPRESENTATIVES=[
   ['SUL E CENTRO OESTE','SC','JOINVILLE','9945','DENNIS','DENNIS RONALDO DE OLIVEIRA','DENNIS'],
