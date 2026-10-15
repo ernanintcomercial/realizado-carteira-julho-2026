@@ -53,10 +53,15 @@
     <div class="field"><label>Contrato</label><select class="control" id="contractSelect"><option value="">Todos os contratos</option></select></div>
     <div class="field rep-picker"><label>Representante</label><input class="control" id="repSearch" placeholder="Selecione representantes" autocomplete="off"><div class="rep-menu" id="repMenu"></div><input type="hidden" id="repSelect"></div>
     <button class="btn" id="clearBtn">Limpar filtros</button>
-    <button class="btn" id="printBtn" hidden>🖨️ Imprimir resultados</button>
-    <button class="btn" id="nneSummaryBtn" hidden>📊 Resumo individual NNE</button>
-    <button class="btn" id="sudSummaryBtn" hidden>📊 Resumo individual SUD</button>
-    <button class="btn" id="scoSummaryBtn" hidden>📊 Resumo individual SCO</button>
+    <button class="btn" id="printBtn" hidden>🖨️ Resultados</button>
+    <div id="summaryGroup" role="group" aria-labelledby="summaryLabel" hidden>
+      <div id="summaryLabel" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">Resumo individual</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" id="nneSummaryBtn" title="Norte e Nordeste" hidden>NNE</button>
+        <button class="btn" id="sudSummaryBtn" title="Sudeste" hidden>SUD</button>
+        <button class="btn" id="scoSummaryBtn" title="Sul e Centro-Oeste" hidden>SCO</button>
+      </div>
+    </div>
   </section>
 
   <nav class="tabs">
@@ -452,6 +457,7 @@ fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenci
   const acessoRepresentante=data.acesso?.tipo==='representante';
   $('printBtn').hidden=regiaoRestrita;
   for(const [region,button] of Object.entries(SUMMARY_REGIONS))$(button).hidden=!canOpenSummary(region);
+  $('summaryGroup').hidden=!Object.keys(SUMMARY_REGIONS).some(canOpenSummary);
   if(acessoRepresentante){const abcTab=document.querySelector('[data-view="abc"]');if(abcTab)abcTab.hidden=true;$('abc').hidden=true}
   $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+data.ordemRegioes.filter(x=>normalizedText(x)!=='EXPORTACAO').map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
