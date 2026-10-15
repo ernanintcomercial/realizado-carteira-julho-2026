@@ -170,6 +170,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--holidays", type=Path)
     parser.add_argument("--as-of", help="Data de execução YYYY-MM-DD.")
+    parser.add_argument(
+        "--refresh-meta-from",
+        help="Revisão autorizada das metas a partir de YYYY-MM; preserva os meses anteriores.",
+    )
     parser.add_argument("--sales-cutoff", help="Corte excepcional de vendas YYYY-MM-DD; demais fontes mantêm o corte diário.")
     parser.add_argument("--billing-cutoff", help="Corte excepcional de faturamento YYYY-MM-DD.")
     parser.add_argument(
@@ -205,6 +209,12 @@ def main() -> None:
             raise SystemExit("ERRO: corte excepcional deve pertencer ao mês corrente e não pode ser futuro.")
     year = int(cutoff.year)
     current_month = int(cutoff.month)
+    refresh_meta_month = None
+    if args.refresh_meta_from:
+        revision = pd.Timestamp(args.refresh_meta_from + "-01")
+        if revision.year != year or revision.month < current_month:
+            raise SystemExit("ERRO: revisão de metas deve começar no mês corrente ou futuro do ano em curso.")
+        refresh_meta_month = int(revision.month)
 
     previous_payload: dict[str, object] = {}
     if args.output.is_file() and args.output.stat().st_size:
@@ -443,15 +453,18 @@ def main() -> None:
                 "Meta": float(record.get("meta", 0)),
             })
 
-    if previous_meta_rows:
+    if previous_meta_rows and refresh_meta_month is None:
         meta_long = pd.DataFrame(previous_meta_rows)
         meta_mode = "preservadas da publicação anterior"
     else:
         meta_year_col = find_column(pd19, "Ano")
-        meta_rep_col = find_column(pd19, "Cod", "Código", "Repres")
+        meta_rep_col = find_column(pd19, "Cod", "Código", "Repres", "Cód Representante", "Cod Representante")
         meta_name_col = find_column(pd19, "Representante", "Nome Repres")
         meta_contract_col = find_column(pd19, "Contrato")
         pd19 = pd19[pd.to_numeric(pd19[meta_year_col], errors="coerce") == year].copy()
+        meta_type_col = next((column for column in pd19.columns if norm(column) == "TIPO META"), None)
+        if meta_type_col is not None:
+            pd19 = pd19[pd19[meta_type_col].map(norm) == "VENDAS"].copy()
         pd19["RepId"] = pd.to_numeric(pd19[meta_rep_col], errors="coerce").fillna(0)
         pd19["RepNome"] = pd19[meta_name_col].fillna(pd19[meta_rep_col]).astype(str)
         pd19["Contrato"] = pd19[meta_contract_col].map(contract_name)
@@ -475,6 +488,13 @@ def main() -> None:
         meta_long["Mes"] = meta_long["MesNome"].map(month_number)
         meta_long["Meta"] = pd.to_numeric(meta_long["Meta"], errors="coerce").fillna(0)
         meta_mode = "ETLdados/WWWPD019.xlsx"
+        if refresh_meta_month is not None and previous_meta_rows:
+            frozen = pd.DataFrame(previous_meta_rows)
+            meta_long = pd.concat([
+                frozen[frozen["Mes"] < refresh_meta_month],
+                meta_long[meta_long["Mes"] >= refresh_meta_month],
+            ], ignore_index=True)
+            meta_mode += f" — revisão autorizada desde {year}-{refresh_meta_month:02}; meses anteriores preservados"
 
     keys = ["Mes", "Regiao", "RepId", "Contrato"]
     actual_current = (

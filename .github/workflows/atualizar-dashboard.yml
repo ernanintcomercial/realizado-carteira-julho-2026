@@ -2,6 +2,11 @@ name: Atualizar dashboard comercial
 
 on:
   workflow_dispatch:
+    inputs:
+      meta_from:
+        description: "Revisão autorizada de metas desde YYYY-MM (vazio preserva metas publicadas)"
+        required: false
+        type: string
   # 07:00 no horário de Brasília (UTC-3), após a chegada dos arquivos ao ETLdados.
   schedule:
     - cron: "0 10 * * 1-5"
@@ -82,7 +87,13 @@ jobs:
             --as-of "$(TZ=America/Sao_Paulo date +%F)"
 
       - name: Executar ETL e validações
+        env:
+          META_FROM: ${{ inputs.meta_from }}
         run: |
+          meta_args=()
+          if [ -n "$META_FROM" ]; then
+            meta_args+=(--refresh-meta-from "$META_FROM")
+          fi
           python etl/gerar_dashboard.py \
             --pd010 _fontes/ETLdados/WWWPD010.xlsx \
             --carteira _fontes/ETLdados/WWWPD010_CARTEIRA.xlsx \
@@ -91,7 +102,7 @@ jobs:
             --index _fontes/ETLdados/INDEX.xlsx \
             --history dados-historicos.json \
             --holidays config/feriados.json \
-            --output dados-gerenciais.json
+            --output dados-gerenciais.json "${meta_args[@]}"
 
       - name: Publicar somente se houver mudança
         shell: bash

@@ -118,6 +118,9 @@ const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]|
 const contractKey=value=>{const t=String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();if(t.startsWith('ALUM'))return 'ALUMINIO';if(t.startsWith('PL'))return 'PLASTICO';if(t==='LED')return 'LED';if(t==='EX')return 'EX';return 'OUTROS'};
  let data,period,rows=[],repChoices=[],abcClassFilter='';
 const selectedRepIds=()=>($('repSelect').value||'').split(',').map(x=>x.trim()).filter(Boolean);
+// Desligados: ocultar identificação nas listas sem apagar o movimento histórico.
+const INACTIVE_REP_IDS=new Set(['9913','9961','9897','9955']);
+const visibleRepresentative=row=>!INACTIVE_REP_IDS.has(String(row.repId));
 const PRINT_REPRESENTATIVES=[
   ['SUL E CENTRO OESTE','SC','JOINVILLE','9945','DENNIS','DENNIS RONALDO DE OLIVEIRA','DENNIS'],
   ['SUL E CENTRO OESTE','PR','CURITIBA','9520','KATO','CAYMARK REPRESENTAÇÕES COMERCIAIS'],
@@ -132,7 +135,6 @@ const PRINT_REPRESENTATIVES=[
   ['SUL E CENTRO OESTE','SC','CHAPECÓ','9960','VINICIUS','J. J. SCHMIDT REPRESENTAÇÕES'],
   ['SUL E CENTRO OESTE','MS','CAMPO GRANDE','9792','CLAUDINEY','LIGHT REPRESENTAÇÕES LTDA'],
   ['SUL E CENTRO OESTE','MT','VÁRZEA GRANDE','8012','THAYANE','REPAN COMÉRCIO E REPRESENTAÇÕES'],
-  ['SUL E CENTRO OESTE','MT','CAMPO NOVO DO PARECIS','9955','WEYGHON','MM SOLUÇÕES E PROJETOS'],
   ['SUL E CENTRO OESTE','GO','GOIÂNIA','9939','RICARDO','DECASTRO REPRESENTAÇÃO'],
   ['SUL E CENTRO OESTE','DF','BRASÍLIA','9870','CARLOS','ROCA REPRESENTAÇÕES LTDA'],
   ['SUDESTE','SP','SÃO PAULO','4805','FILIAL SP','SERGIO MORETO'],
@@ -144,11 +146,9 @@ const PRINT_REPRESENTATIVES=[
   ['SUDESTE','SP','SÃO JOSÉ DOS CAMPOS','9290','RINALDO','BOTELHO CICONELI REPRESENTAÇÕES'],
   ['SUDESTE','SP','SÃO PAULO','9883','CLEBER','CGK P. REPRESENTAÇÃO COMERCIAL'],
   ['SUDESTE','SP','BAURU','7097','GILBERTO','CRUZ REPRESENTAÇÕES COMERCIAIS'],
-  ['SUDESTE','RJ','BARRA DA TIJUCA','9961','PEDRO','P. L. MOREIRA REPRESENTAÇÕES'],
   ['SUDESTE','SP','JUNDIAÍ','9911','DIEGO','IDEAL CONSULTORIA E REPRESENTAÇÃO'],
   ['SUDESTE','MG','JUIZ DE FORA','9891','IGOR','IGOR NOGUEIRA VOLTAIRE'],
   ['SUDESTE','MG','UBERLANDIA','9860','MAURICIO','LANJO REPRESENTACOES'],
-  ['SUDESTE','SP','RIBEIRÃO PRETO','9897','RODRIGO','V.G. REPRESENTAÇÕES E NEGÓCIOS'],
   ['SUDESTE','MG','BELO HORIZONTE','8005','MÁRCIO','RAPOSO REPRESENTAÇÕES'],
   ['SUDESTE','INTERNA SP','SANTA GERTRUDES','9932','EDNALDO','EDNALDO DE LIMA FERREIRA JUNIOR'],
   ['SUDESTE','INTERNA SP','SÃO PAULO','4803','WALTER','WALTER MARTINELLI'],
@@ -163,7 +163,6 @@ const PRINT_REPRESENTATIVES=[
   ['NORTE E NORDESTE','MA','SÃO LUIZ','9940','ANTONIO','AC & CÉU REPRESENTAÇÕES'],
   ['NORTE E NORDESTE','BA','SALVADOR','7064','GABRIEL','B. C. L. REPRESENTAÇÕES'],
   ['NORTE E NORDESTE','CE','FORTALEZA','9957','DANUBIA','J.N. MENDES JUNIOR'],
-  ['NORTE E NORDESTE','PE','CARUARU','9913','JUNIOR','BEZERRA & VIEGAS REPRESENTAÇÕES'],
   ['NORTE E NORDESTE','PB','JOÃO PESSOA','8045','MIGUEL','MAC REPRESENTAÇÕES'],
   ['NORTE E NORDESTE','PE','PETROLINA','9740','SERGIO','RIO SUL REPRESENTAÇÕES'],
   ['NORTE E NORDESTE','PE','RECIFE','9010','KATTYANE','SOUZA & MOTTA REPRESENTAÇÕES'],
@@ -211,7 +210,7 @@ function metaUntilCutoff(){
 function updateRepOptions(){
   const region=$('regionSelect').value,old=selectedRepIds();
   const base=adjustedPeriodRows(period);
-  const available=aggregate(base.filter(r=>!region||r.regiao===region),['repId','representante']);
+  const available=aggregate(base.filter(r=>visibleRepresentative(r)&&(!region||r.regiao===region)),['repId','representante']);
   const valid=old.filter(id=>available.some(r=>String(r.repId)===id));$('repSelect').value=valid.join(',');
   repChoices=available.sort((a,b)=>{
     const selectedOrder=Number(!valid.includes(String(a.repId)))-Number(!valid.includes(String(b.repId)));
@@ -248,7 +247,7 @@ function renderRegions(){
   $('regionCards').innerHTML=regionAgg.map(r=>{const p=percent(r.realizado,r.meta),totalWidth=Math.min(100,p);return `<article class="card region"><h3>${r.regiao}</h3><div class="metric"><span>Meta</span><b>${money(r.meta)}</b></div><div class="metric"><span>Vendas captadas</span><b>${money(r.realizado)}</b></div><div class="metric"><span>Carteira Aberto Mês</span><b>${money(r.carteira)}</b></div><div class="progress" role="img" aria-label="${r.regiao}: vendas em ${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}% da meta; carteira aberto mês ${money(r.carteira)}"><span class="progress-net" style="width:${totalWidth}%"></span></div><div class="metric"><span>Atingimento</span><b>${p.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b></div></article>`}).join('');
 }
 function renderInsights(meta,real,wallet){
-  const repAgg=aggregate(rows,['repId','representante','regiao']),best=repAgg.filter(x=>x.meta>0).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta))[0],repSelecionado=selectedRepIds(),repAtual=repSelecionado.length===1?repAgg.find(x=>String(x.repId)===repSelecionado[0]):null;
+  const repAgg=aggregate(rows.filter(visibleRepresentative),['repId','representante','regiao']),best=repAgg.filter(x=>x.meta>0).sort((a,b)=>percent(b.realizado,b.meta)-percent(a.realizado,a.meta))[0],repSelecionado=selectedRepIds(),repAtual=repSelecionado.length===1?repAgg.find(x=>String(x.repId)===repSelecionado[0]):null;
   const regionAgg=aggregate(rows,['regiao']).filter(r=>r.regiao!=='EXPORTAÇÃO'&&r.meta>0).sort((a,b)=>percent(a.realizado,a.meta)-percent(b.realizado,b.meta)),weak=regionAgg[0];
   const gap=meta-real,regionalRestrita=Array.isArray(data.ordemRegioes)&&data.ordemRegioes.length===1,regiaoSelecionada=$('regionSelect').value,contratoSelecionado=$('contractSelect').value,baseContexto=adjustedPeriodRows(period).filter(r=>(!regiaoSelecionada||r.regiao===regiaoSelecionada)&&(!contratoSelecionado||r.contrato===contratoSelecionado)),contextoReal=sum(baseContexto,'realizado'),regionalReal=contextoReal,items=[
     {c:gap<=0?'':'bad',t:gap<=0?`Total geral supera meta em ${money(-gap)}.`:`Faltam ${money(gap)} para atingir a meta.`},
@@ -259,7 +258,7 @@ function renderInsights(meta,real,wallet){
 }
 function renderRanking(){
   const sortMode=$('rankingSort')?.value||'attainment';
-  const agg=aggregate(rows,['repId','representante','regiao']).filter(x=>x.meta||x.realizado||x.carteira).sort((a,b)=>sortMode==='realizado'?b.realizado-a.realizado:percent(b.realizado,b.meta)-percent(a.realizado,a.meta)).slice(0,20);
+  const agg=aggregate(rows.filter(visibleRepresentative),['repId','representante','regiao']).filter(x=>x.meta||x.realizado||x.carteira).sort((a,b)=>sortMode==='realizado'?b.realizado-a.realizado:percent(b.realizado,b.meta)-percent(a.realizado,a.meta)).slice(0,20);
   $('rankingRows').innerHTML=agg.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.repId}</div></td><td>${r.regiao}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
 function renderContracts(){
@@ -282,7 +281,7 @@ function renderContracts(){
   }).join('');
 }
 function renderDetails(){
-  const sorted=[...rows].sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
+  const sorted=rows.filter(visibleRepresentative).sort((a,b)=>a.regiao.localeCompare(b.regiao)||a.representante.localeCompare(b.representante)||data.ordemContratos.indexOf(a.contrato)-data.ordemContratos.indexOf(b.contrato));
   $('detailCount').textContent=sorted.length+' combinações';
   $('detailRows').innerHTML=sorted.map(r=>`<tr><td><button class="filter-link" onclick="filterRepresentative('${r.repId}')">${r.representante}</button><div class="muted">${r.regiao} · ${r.repId}</div></td><td>${r.contrato}</td><td>${money(r.meta)}</td><td>${money(r.realizado)}</td><td>${money(r.carteira)}</td><td>${pill(percent(r.carteira,r.meta))}</td><td>${pill(percent(r.realizado,r.meta))}</td></tr>`).join('');
 }
