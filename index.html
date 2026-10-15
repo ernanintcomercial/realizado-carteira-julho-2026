@@ -435,7 +435,7 @@ fetch('dados-gerenciais.json?v=46').then(r=>{if(!r.ok)throw Error('dados-gerenci
   $('printBtn').hidden=regiaoRestrita;
   $('nneSummaryBtn').hidden=!data.ordemRegioes.includes('NORTE E NORDESTE');
   if(acessoRepresentante){const abcTab=document.querySelector('[data-view="abc"]');if(abcTab)abcTab.hidden=true;$('abc').hidden=true}
-  $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+[...data.ordemRegioes].map(x=>`<option>${x}</option>`).join('');
+  $('regionSelect').innerHTML=regiaoRestrita?`<option>${data.ordemRegioes[0]}</option>`:'<option value="">Todas as regiões</option>'+data.ordemRegioes.filter(x=>normalizedText(x)!=='EXPORTACAO').map(x=>`<option>${x}</option>`).join('');
   $('regionSelect').value=regiaoRestrita?data.ordemRegioes[0]:'';$('regionSelect').disabled=regiaoRestrita;
   $('contractSelect').innerHTML+=[...data.ordemContratos].map(x=>`<option>${x}</option>`).join('');
   $('stamp').innerHTML=`Realizado até <b>${data.cortes.realizado}</b>${data.cortes.vendasParcial?'<br>'+escapePrint(data.cortes.vendasParcial):''}<br>Carteira em <b>${data.cortes.carteira}</b>`;
