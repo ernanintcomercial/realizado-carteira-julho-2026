@@ -125,8 +125,8 @@ const percent=(a,b)=>b?100*a/b:0, sum=(rows,key)=>rows.reduce((n,x)=>n+(+x[key]|
 const contractKey=value=>{const t=String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase();if(t.startsWith('ALUM'))return 'ALUMINIO';if(t.startsWith('PL'))return 'PLASTICO';if(t==='LED')return 'LED';if(t==='EX')return 'EX';return 'OUTROS'};
  let data,period,rows=[],repChoices=[],abcClassFilter='';
 const selectedRepIds=()=>($('repSelect').value||'').split(',').map(x=>x.trim()).filter(Boolean);
-// Desligados: ocultar identificação nas listas sem apagar o movimento histórico.
-const INACTIVE_REP_IDS=new Set(['9913','9961','9897','9955']);
+// Identificações ocultas nas listas por solicitação comercial; preservar o movimento histórico.
+const INACTIVE_REP_IDS=new Set(['9913','9961','9897','9955','90007']);
 const visibleRepresentative=row=>!INACTIVE_REP_IDS.has(String(row.repId));
 const PRINT_REPRESENTATIVES=[
   ['SUL E CENTRO OESTE','SC','JOINVILLE','9945','DENNIS','DENNIS RONALDO DE OLIVEIRA','DENNIS'],
