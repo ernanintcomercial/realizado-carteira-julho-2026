@@ -82,10 +82,10 @@
     <section class="card wallet-overview" aria-labelledby="walletOverviewTitle">
       <h2 id="walletOverviewTitle">Carteira por período</h2>
       <div class="wallet-periods">
-        <div class="wallet-period"><label>Em aberto até outubro</label><b id="kWalletJanOctober">R$ 1.275.524</b><small>Carteira em aberto</small></div>
+        <div class="wallet-period"><label>Em aberto até outubro</label><b id="kWalletJanOctober">R$ 997.884</b><small>Carteira em aberto</small></div>
         <div class="wallet-period"><label>Novembro</label><b id="kWalletScheduled">R$ 1.243.605</b><small>Carteira programada</small></div>
         <div class="wallet-period"><label>Dezembro</label><b id="kWalletScheduledDecember">R$ 391.660</b><small>Carteira programada</small></div>
-        <div class="wallet-period"><label>Carteira total</label><b class="blue" id="kWalletTotal">R$ 2.881.338</b></div>
+        <div class="wallet-period"><label>Carteira total</label><b class="blue" id="kWalletTotal">R$ 2.903.682</b></div>
       </div>
     </section>
     <section class="card pace" aria-label="Régua de progresso do período">
@@ -241,7 +241,7 @@ function toggleRepresentative(repId){const ids=selectedRepIds(),id=String(repId)
 function render(){
   rows=filteredRows();const meta=sum(rows,'meta'),cutMeta=metaUntilCutoff(),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta),cutPct=percent(real,cutMeta);
   const faturamento=sum(filteredFaturamento(),'faturado');
-  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kFaturamento').textContent=money(faturamento);$('kWallet').textContent=money(wallet);$('kWalletTotal').textContent=money(2881338);
+  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kFaturamento').textContent=money(faturamento);$('kWallet').textContent=money(wallet);$('kWalletTotal').textContent=money(2903682);
   $('kCutMeta').textContent=money(cutMeta);$('kCutPct').textContent=cutMeta?cutPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';$('kFullPct').textContent=meta?pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';
   $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
   $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent=period.label+' · posição '+data.cortes.carteira;
