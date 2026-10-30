@@ -42,6 +42,7 @@
     @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.main-grid,.split{grid-template-columns:1fr}}
     @media(max-width:760px){.app{padding:18px 10px}.kpis{grid-template-columns:repeat(2,1fr)}.regions{grid-template-columns:1fr}.field{flex:1 1 45%}.field select{width:100%;min-width:0}.header-right{align-items:flex-end;flex-direction:column}.tabs{overflow:auto}.tab{white-space:nowrap}.pace-head{align-items:flex-start;flex-direction:column}.pace-pcts{text-align:left}}
     @media(max-width:430px){header{flex-direction:column}.header-right{width:100%;align-items:flex-start;text-align:left}.kpis{grid-template-columns:1fr}}
+    .kpi-d1{display:block;color:var(--muted);font-size:12px;margin:-4px 0 13px;line-height:1.4}.kpi-d1[hidden],.fat-d1[hidden]{display:none}.kpi-sales .kpi-sub{display:grid;grid-template-columns:1fr auto;align-items:baseline}.fat-d1{grid-column:1/-1;text-align:right;font-size:11px;color:var(--muted);margin-top:2px}
   </style>
 </head>
 <body>
@@ -75,17 +76,17 @@
     <div class="grid kpis">
       <article class="card kpi"><label>Meta do período</label><strong id="kMeta">—</strong><small id="kMetaNote"></small></article>
       <article class="card kpi focus"><label>Meta até o corte</label><strong id="kCutMeta">—</strong><small id="kCutMetaNote">referência operacional diária</small></article>
-      <article class="card kpi kpi-sales"><label>Vendas captadas</label><strong class="blue" id="kReal">—</strong><small id="kRealNote" hidden></small><div class="kpi-sub"><span>Faturamento bruto</span><b id="kFaturamento">—</b></div></article>
+      <article class="card kpi kpi-sales"><label>Vendas captadas</label><strong class="blue" id="kReal">—</strong><span class="kpi-d1" id="kRealD1" hidden></span><small id="kRealNote" hidden></small><div class="kpi-sub"><span>Faturamento bruto</span><b id="kFaturamento">—</b><span class="fat-d1" id="kFatD1" hidden></span></div></article>
       <article class="card kpi"><label id="kWalletLabel">Carteira do mês</label><strong class="amber" id="kWallet">—</strong><small id="kWalletNote"></small></article>
       <article class="card kpi"><label>Distância da meta</label><strong id="kGap">—</strong><small id="kGapNote"></small></article>
     </div>
     <section class="card wallet-overview" aria-labelledby="walletOverviewTitle">
       <h2 id="walletOverviewTitle">Carteira por período</h2>
       <div class="wallet-periods">
-        <div class="wallet-period"><label>Em aberto até outubro</label><b id="kWalletJanOctober">R$ 997.884</b><small>Carteira em aberto</small></div>
+        <div class="wallet-period"><label>Em aberto até outubro</label><b id="kWalletJanOctober">R$ 999.815</b><small>Carteira em aberto</small></div>
         <div class="wallet-period"><label>Novembro</label><b id="kWalletScheduled">R$ 1.261.700</b><small>Carteira programada</small></div>
         <div class="wallet-period"><label>Dezembro</label><b id="kWalletScheduledDecember">R$ 391.736</b><small>Carteira programada</small></div>
-        <div class="wallet-period"><label>Carteira total</label><b class="blue" id="kWalletTotal">R$ 2.903.682</b></div>
+        <div class="wallet-period"><label>Carteira total</label><b class="blue" id="kWalletTotal">R$ 2.960.257</b></div>
       </div>
     </section>
     <section class="card pace" aria-label="Régua de progresso do período">
@@ -238,10 +239,19 @@ function searchRepresentative(){
   document.querySelectorAll('.rep-option').forEach(el=>el.style.display=!query||el.textContent.toLocaleLowerCase('pt-BR').includes(query)?'flex':'none');
 }
 function toggleRepresentative(repId){const ids=selectedRepIds(),id=String(repId),next=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];$('repSelect').value=next.join(',');updateRepOptions();render()}
+function renderD1(){
+  const previous=data.comparativoD1,previousPeriod=previous?.periodos?.find(p=>p.id===period.id);
+  const salesDate=previous?.cortes?.realizado,fatDate=previous?.cortes?.faturamento;
+  const sales=$('kRealD1'),fat=$('kFatD1');
+  sales.hidden=!salesDate||!previousPeriod;fat.hidden=!fatDate;
+  if(!sales.hidden){sales.textContent='D-1: '+money(sum(previousPeriod.registros.filter(matchesFilters),'realizado'));sales.title='Acumulado até '+salesDate;sales.setAttribute('aria-label',sales.textContent+' · acumulado até '+salesDate)}
+  if(!fat.hidden){const reps=selectedRepIds(),region=$('regionSelect').value,contract=$('contractSelect').value;const base=previous.faturamentoRegistros.filter(r=>(!period.meses.length||period.meses.includes(+r.mes))&&(!region||r.regiao===region)&&(!contract||contractKey(r.contrato)===contractKey(contract))&&(!reps.length||reps.includes(String(r.repId))));fat.textContent='D-1: '+money(sum(base,'faturado'));fat.title='Acumulado até '+fatDate;fat.setAttribute('aria-label',fat.textContent+' · acumulado até '+fatDate)}
+}
 function render(){
+  renderD1();
   rows=filteredRows();const meta=sum(rows,'meta'),cutMeta=metaUntilCutoff(),real=sum(rows,'realizado'),wallet=sum(rows,'carteira'),gap=meta-real,pct=percent(real,meta),cutPct=percent(real,cutMeta);
   const faturamento=sum(filteredFaturamento(),'faturado');
-  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kFaturamento').textContent=money(faturamento);$('kWallet').textContent=money(wallet);$('kWalletTotal').textContent=money(2903682);
+  $('kMeta').textContent=money(meta);$('kReal').textContent=money(real);$('kFaturamento').textContent=money(faturamento);$('kWallet').textContent=money(wallet);$('kWalletTotal').textContent=money(2960257);
   $('kCutMeta').textContent=money(cutMeta);$('kCutPct').textContent=cutMeta?cutPct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';$('kFullPct').textContent=meta?pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—';
   $('kGap').textContent=money(Math.abs(gap));$('kGap').className=gap<=0?'green':'red';$('kGapNote').textContent=gap<=0?'potencial acima da meta':'ainda necessário';
   $('kMetaNote').textContent=period.label;$('kRealNote').textContent='corte '+data.cortes.realizado;$('kWalletNote').textContent=period.label+' · posição '+data.cortes.carteira;

@@ -90,6 +90,7 @@ jobs:
         env:
           META_FROM: ${{ inputs.meta_from }}
         run: |
+          python -m unittest discover -s etl -p 'test_comparativo_d1.py'
           meta_args=()
           if [ -n "$META_FROM" ]; then
             meta_args+=(--refresh-meta-from "$META_FROM")

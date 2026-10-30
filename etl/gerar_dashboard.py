@@ -6,6 +6,7 @@ import unicodedata
 from pathlib import Path
 
 import pandas as pd
+from comparativo_d1 import attach_previous
 
 
 CONTRACTS = {
@@ -935,6 +936,7 @@ def main() -> None:
     if args.billing_cutoff:
         payload["fontes"][5] = f"{args.eft018.name} — faturamento atualizado incluindo {billing_cutoff.strftime('%d/%m/%Y')}"
 
+    attach_previous(payload, previous_payload)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temp_output = args.output.with_suffix(args.output.suffix + ".tmp")
     temp_output.write_text(
