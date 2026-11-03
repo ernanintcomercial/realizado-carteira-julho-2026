@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 from comparativo_d1 import attach_previous
+from calendario import previous_business_day, last_business_day
 
 
 CONTRACTS = {
@@ -199,7 +200,7 @@ def main() -> None:
         holidays = set(json.loads(args.holidays.read_text(encoding="utf-8")))
 
     today = pd.Timestamp(args.as_of).normalize() if args.as_of else pd.Timestamp.now().normalize()
-    cutoff = (today - pd.Timedelta(days=1)).normalize()
+    cutoff = pd.Timestamp(previous_business_day(today.date(), holidays))
     daily_cutoff = cutoff
     billing_cutoff = pd.Timestamp(args.billing_cutoff).normalize() if args.billing_cutoff else daily_cutoff
     if billing_cutoff > today or billing_cutoff.year != daily_cutoff.year or billing_cutoff.month != daily_cutoff.month:
@@ -255,6 +256,7 @@ def main() -> None:
             expected_history_cutoff = (
                 pd.Timestamp(year, current_month, 1) - pd.Timedelta(days=1)
             ).normalize()
+            expected_history_cutoff = pd.Timestamp(last_business_day(expected_history_cutoff.date(), holidays))
             history_cutoff = pd.to_datetime(
                 history_payload.get("cortes", {}).get("realizado"),
                 format="%d/%m/%Y",

@@ -21,13 +21,28 @@ def consolidate(directory, output, year):
         return legacy, legacy.name
     if not beginning.is_file() or not ending.is_file():
         raise ValueError('Lote incompleto: são necessários WWEFT018inicio.LST e WWEFT018fim.LST.')
+    # Compatibilidade com os dois lotes usados: jan-mai/jun-dez ou jan-jun/jul-dez.
+    # Junho no primeiro arquivo exige que o segundo comece somente em julho.
+    boundary = 5
+    with beginning.open(encoding='latin1', newline='') as stream:
+        reader = csv.reader(stream, delimiter='|')
+        keys = next(reader, [])
+        index = next((i for i, key in enumerate(keys) if norm(key) == 'DATA EMISSAO'), None)
+        if index is not None:
+            for row in reader:
+                if len(row) > index and row[index].strip():
+                    try:
+                        if datetime.strptime(row[index].strip(), '%d/%m/%y').month == 6:
+                            boundary = 6
+                    except ValueError:
+                        pass  # A leitura validada abaixo identifica a linha inválida.
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix('.tmp')
     header = None
     try:
         with temporary.open('w', encoding='latin1', newline='') as destination:
             writer = csv.writer(destination, delimiter='|')
-            for source, start_month, end_month in [(beginning, 1, 5), (ending, 6, 12)]:
+            for source, start_month, end_month in [(beginning, 1, boundary), (ending, boundary + 1, 12)]:
                 count = 0
                 with source.open(encoding='latin1', newline='') as stream:
                     reader = csv.reader(stream, delimiter='|')

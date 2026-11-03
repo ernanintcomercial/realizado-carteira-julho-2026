@@ -37,6 +37,13 @@ class ConsolidationTests(unittest.TestCase):
             consolidate(self.directory, self.output, 2026)
         self.assertFalse(self.output.exists())
 
+    def test_semester_split(self):
+        self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'maio'], ['30/06/26', '20', 'junho']])
+        self.write('WWEFT018fim.LST', [['01/07/26', '30', 'julho'], ['30/10/26', '40', 'outubro']])
+        path, _ = consolidate(self.directory, self.output, 2026)
+        with path.open(encoding='latin1', newline='') as stream:
+            self.assertEqual(len(list(csv.reader(stream, delimiter='|'))), 5)
+
     def test_totvs_trailing_header_separator(self):
         self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'inicio']],
                    ['Data Emissão', 'ROB', 'Descrição', ''])

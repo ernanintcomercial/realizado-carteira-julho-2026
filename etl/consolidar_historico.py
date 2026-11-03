@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+from calendario import previous_business_day, last_business_day
 
 
 def parse_args() -> argparse.Namespace:
@@ -14,6 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--history", type=Path, required=True)
     parser.add_argument("--dashboard", type=Path, required=True)
     parser.add_argument("--as-of", required=True, help="Data de execução YYYY-MM-DD.")
+    parser.add_argument("--holidays", type=Path)
     parser.add_argument(
         "--force",
         action="store_true",
@@ -68,20 +70,22 @@ def assert_month_consistent(payload: dict[str, object], month: int) -> None:
 def main() -> None:
     args = parse_args()
     as_of = pd.Timestamp(args.as_of).normalize()
-    current_cutoff = as_of - pd.Timedelta(days=1)
+    holidays = set(json.loads(args.holidays.read_text(encoding="utf-8"))) if args.holidays else set()
+    current_cutoff = pd.Timestamp(previous_business_day(as_of.date(), holidays))
     if current_cutoff.month == 1:
         print('{"status":"SKIP","reason":"primeiro mês do ano"}')
         return
 
     closed_end = pd.Timestamp(current_cutoff.year, current_cutoff.month, 1) - pd.Timedelta(days=1)
     closed_month = int(closed_end.month)
+    closed_business_end = pd.Timestamp(last_business_day(closed_end.date(), holidays))
 
     history = json.loads(args.history.read_text(encoding="utf-8"))
     dashboard = json.loads(args.dashboard.read_text(encoding="utf-8"))
     history_cutoff = parse_date(history.get("cortes", {}).get("realizado"))
     dashboard_cutoff = parse_date(dashboard.get("cortes", {}).get("realizado"))
 
-    if history_cutoff and history_cutoff >= closed_end and not args.force:
+    if history_cutoff and history_cutoff >= closed_business_end and not args.force:
         print(
             json.dumps(
                 {"status": "SKIP", "reason": "histórico já consolidado", "through": history_cutoff.strftime("%Y-%m-%d")}
@@ -91,10 +95,10 @@ def main() -> None:
 
     if int(dashboard.get("ano", 0)) != current_cutoff.year or not dashboard_cutoff:
         raise SystemExit("BLOQUEADO: dashboard anterior sem corte válido para consolidar o histórico.")
-    if dashboard_cutoff < closed_end:
+    if dashboard_cutoff < closed_business_end:
         raise SystemExit(
             "BLOQUEADO: dashboard anterior ainda não alcança o último dia do mês a consolidar "
-            f"({closed_end.strftime('%d/%m/%Y')})."
+            f"({closed_business_end.strftime('%d/%m/%Y')})."
         )
 
     assert_month_consistent(dashboard, closed_month)
