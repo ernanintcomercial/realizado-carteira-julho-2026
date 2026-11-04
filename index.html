@@ -378,7 +378,9 @@ function selectPeriod(){
   period=data.periodos.find(x=>x.id===$('periodSelect').value)||data.periodos[0];updateRepOptions();render();
 }
 function currentMonthPeriod(){
-  const month=Number(data.metaDiaria?.mes)||new Date().getMonth()+1;
+  const calendar=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',year:'numeric',month:'numeric'}).formatToParts(new Date());
+  const calendarYear=Number(calendar.find(x=>x.type==='year').value);
+  const month=calendarYear===Number(data.ano)?Number(calendar.find(x=>x.type==='month').value):Number(data.metaDiaria?.mes)||1;
   return data.periodos.find(x=>x.id===`M${String(month).padStart(2,'0')}`)||data.periodos[0];
 }
 function filterRepresentative(repId){
