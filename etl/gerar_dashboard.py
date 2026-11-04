@@ -772,6 +772,10 @@ def main() -> None:
         .str.replace(",", ".", regex=False),
         errors="coerce",
     ).fillna(0)
+    # Fonte que já alcança o mês e o corte pode comprovar um início de mês sem notas.
+    # Uma extração parada no mês anterior continua bloqueada.
+    source_covers_billing_month = bool(((eft["Data"].dt.year == year) &
+        (eft["Data"].dt.month == current_month) & (eft["Data"] >= billing_cutoff)).any())
     eft = eft[(eft["Data"].dt.year == year) & (eft["Data"] <= billing_cutoff)].copy()
     if args.billing_cutoff:
         # A atualização intradia substitui apenas o mês em fechamento.
@@ -781,6 +785,9 @@ def main() -> None:
         raise SystemExit("ERRO: WWEFT018 ficou vazio após aplicar ano e corte.")
     eft["Mes"] = eft["Data"].dt.month.astype(int)
     eft_months = sorted(int(value) for value in eft["Mes"].unique())
+    billing_month_zero = current_month not in eft_months and source_covers_billing_month
+    if billing_month_zero:
+        eft_months = sorted([*eft_months, current_month])
     if current_month not in eft_months:
         raise SystemExit(
             f"BLOQUEADO: WWEFT018 não contém o mês do corte ({current_month}). "
@@ -903,6 +910,7 @@ def main() -> None:
             "linhasPD019": int(len(pd19)),
             "linhasEFT018": int(len(eft)),
             "mesesEFT018": eft_months,
+            "faturamentoMesSemMovimentoAteCorte": billing_month_zero,
             "faturamentoBrutoEFT018": eft_gross,
             "faturamentoComercialEFT018": eft_commercial,
             "gruposFaturamentoOutros": eft_other_groups,

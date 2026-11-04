@@ -51,6 +51,7 @@ jobs:
           python etl/consolidar_eft018.py \
             --directory _fontes/ETLdados \
             --output _fontes/WWEFT018consolidado.LST \
+            --allow-identical-overlap \
             --year "$(TZ=America/Sao_Paulo date +%Y)" >> "$GITHUB_ENV"
 
       - name: Validar idade das fontes

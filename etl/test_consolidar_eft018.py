@@ -44,6 +44,16 @@ class ConsolidationTests(unittest.TestCase):
         with path.open(encoding='latin1', newline='') as stream:
             self.assertEqual(len(list(csv.reader(stream, delimiter='|'))), 5)
 
+    def test_identical_overlap_explicitly_enabled(self):
+        self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'maio'], ['30/06/26', '20', 'junho']])
+        self.write('WWEFT018fim.LST', [['30/06/26', '20', 'junho'], ['01/07/26', '30', 'julho']])
+        path, _ = consolidate(self.directory, self.output, 2026, True)
+        with path.open(encoding='latin1', newline='') as stream:
+            self.assertEqual(len(list(csv.reader(stream, delimiter='|'))), 4)
+        self.write('WWEFT018fim.LST', [['30/06/26', '21', 'junho'], ['01/07/26', '30', 'julho']])
+        with self.assertRaisesRegex(ValueError, 'divergente'):
+            consolidate(self.directory, self.output, 2026, True)
+
     def test_totvs_trailing_header_separator(self):
         self.write('WWEFT018inicio.LST', [['31/05/26', '10', 'inicio']],
                    ['Data Emissão', 'ROB', 'Descrição', ''])

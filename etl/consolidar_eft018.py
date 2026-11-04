@@ -1,6 +1,7 @@
 """Reúne os EFT018 sem sobreposição; mantém o formato original do TOTVS."""
 import argparse
 import csv
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 import unicodedata
@@ -11,7 +12,7 @@ def norm(value):
                    if not unicodedata.combining(c)).strip().upper()
 
 
-def consolidate(directory, output, year):
+def consolidate(directory, output, year, allow_identical_overlap=False):
     beginning = directory / 'WWEFT018inicio.LST'
     ending = directory / 'WWEFT018fim.LST'
     if not beginning.exists() and not ending.exists():
@@ -39,6 +40,8 @@ def consolidate(directory, output, year):
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix('.tmp')
     header = None
+    beginning_overlap = Counter()
+    ending_overlap = Counter()
     try:
         with temporary.open('w', encoding='latin1', newline='') as destination:
             writer = csv.writer(destination, delimiter='|')
@@ -72,12 +75,20 @@ def consolidate(directory, output, year):
                             date = datetime.strptime(row[date_index].strip(), '%d/%m/%y')
                         except ValueError as error:
                             raise ValueError(f'{source.name}, linha {reader.line_num}: data inválida.') from error
+                        if (allow_identical_overlap and source == ending
+                                and date.year == year and date.month == boundary):
+                            ending_overlap[tuple(cell.strip() for cell in row)] += 1
+                            continue
                         if date.year != year or not start_month <= date.month <= end_month:
                             raise ValueError(f'{source.name}, linha {reader.line_num}: data {date:%d/%m/%Y} fora do período; possível sobreposição.')
+                        if source == beginning and date.month == boundary:
+                            beginning_overlap[tuple(cell.strip() for cell in row)] += 1
                         writer.writerow(row)
                         count += 1
                 if count == 0:
                     raise ValueError(f'{source.name}: nenhuma linha de faturamento.')
+        if ending_overlap and beginning_overlap != ending_overlap:
+            raise ValueError('Sobreposição divergente entre os EFT018; revisão necessária.')
         temporary.replace(output)
     except Exception:
         temporary.unlink(missing_ok=True)
@@ -90,8 +101,9 @@ def main():
     parser.add_argument('--directory', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--year', type=int, required=True)
+    parser.add_argument('--allow-identical-overlap', action='store_true')
     args = parser.parse_args()
-    source, recent = consolidate(args.directory, args.output, args.year)
+    source, recent = consolidate(args.directory, args.output, args.year, args.allow_identical_overlap)
     print(f'EFT_INPUT={source.as_posix()}')
     print(f'EFT_RECENT={recent}')
 
