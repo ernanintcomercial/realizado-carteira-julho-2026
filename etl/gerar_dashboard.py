@@ -25,6 +25,8 @@ EXPORT_REP_IDS = {7074}
 WALLET_FX_CLIENT = 22540
 WALLET_FX_ORDER = "EXP-005-26"
 WALLET_FX_RATE = 5.2232
+# Cotação inferida da conciliação com o Power BI e autorizada para este pedido.
+SALES_FX_RATES = {(7074, "EXP-010-26"): 5.3738}
 REGION_ORDER = [
     "SUL E CENTRO OESTE",
     "SUDESTE",
@@ -314,6 +316,11 @@ def main() -> None:
         lambda x: UF_CODE_TO_NAME.get(norm(x), norm(x))
     )
     pd10["ROBValor"] = pd.to_numeric(pd10[rob_col], errors="coerce").fillna(0)
+    sales_order_col = find_column(pd10, "Nr Pedido")
+    sales_orders = pd10[sales_order_col].map(norm)
+    for (rep_id, order), rate in SALES_FX_RATES.items():
+        match = pd10["RepId"].eq(rep_id) & sales_orders.eq(order)
+        pd10.loc[match, "ROBValor"] *= rate
     index_code_col = find_column(index_df, "codigo", "código")
     index_name_col = find_column(index_df, "nome")
     index_region_col = find_column(index_df, "região", "regiao")
